@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <Spinner size="lg" />
       </div>
     );
@@ -46,21 +46,21 @@ export default function Dashboard() {
       label: 'New Document', 
       desc: 'Create a new document',
       href: '/documents/new',
-      color: 'bg-indigo-500'
+      color: 'bg-black'
     },
     { 
       icon: Users, 
       label: 'New Workspace', 
       desc: 'Create a team workspace',
       href: '/workspaces/new',
-      color: 'bg-purple-500'
+      color: 'bg-black'
     },
     { 
       icon: Video, 
       label: 'Start Meeting', 
       desc: 'Start a video call',
       href: '/meeting',
-      color: 'bg-green-500'
+      color: 'bg-black'
     },
   ];
 
@@ -110,17 +110,17 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
+      <header className="bg-black border-b-2 border-black sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-black" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-white">
                 CollabSpace
               </span>
             </Link>
@@ -131,8 +131,8 @@ export default function Dashboard() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search documents, workspaces..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-indigo-500 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 outline-none transition-colors"
+                  placeholder="Search..."
+                  className="w-full pl-10 pr-4 py-2 bg-white border-2 border-white rounded-lg text-black placeholder-gray-500 outline-none focus:ring-2 focus:ring-white"
                 />
               </div>
             </div>
@@ -141,17 +141,17 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               <Link 
                 href="/profile"
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 transition-colors"
               >
                 <DynamicAvatar seed={user.email} style="avataaars" size={36} />
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
+                  <p className="text-sm font-medium text-white">{user.name}</p>
+                  <p className="text-xs text-gray-400">{user.email}</p>
                 </div>
               </Link>
               <button
                 onClick={logout}
-                className="p-2 text-gray-500 hover:text-red-500 transition-colors"
+                className="p-2 text-gray-400 hover:text-white transition-colors"
                 title="Sign out"
               >
                 <LogOut className="w-5 h-5" />
@@ -164,10 +164,10 @@ export default function Dashboard() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-black mb-2">
             Welcome back, {user.name?.split(' ')[0]}! 👋
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             What would you like to do today?
           </p>
         </div>
@@ -178,23 +178,23 @@ export default function Dashboard() {
             <Link
               key={action.label}
               href={action.href}
-              className="group flex items-center p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all hover:shadow-lg"
+              className="group flex items-center p-4 bg-white border-2 border-black rounded-lg hover:bg-black hover:text-white transition-all"
             >
-              <div className={`w-12 h-12 ${action.color} rounded-xl flex items-center justify-center mr-4`}>
-                <action.icon className="w-6 h-6 text-white" />
+              <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mr-4 group-hover:bg-white`}>
+                <action.icon className="w-6 h-6 text-white group-hover:text-black" />
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-gray-900 dark:text-white">{action.label}</p>
-                <p className="text-sm text-gray-500">{action.desc}</p>
+                <p className="font-semibold">{action.label}</p>
+                <p className="text-sm opacity-70">{action.desc}</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+              <ChevronRight className="w-5 h-5 opacity-50" />
             </Link>
           ))}
         </div>
 
         {/* All Features */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-xl font-bold text-black mb-4">
             All Features
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,20 +202,20 @@ export default function Dashboard() {
               <Link
                 key={feature.label}
                 href={feature.href}
-                className="group p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all"
+                className="group p-4 bg-white border-2 border-black rounded-lg hover:bg-black hover:text-white transition-all"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-colors">
-                    <feature.icon className="w-5 h-5 text-gray-600 dark:text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
+                  <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center group-hover:bg-white">
+                    <feature.icon className="w-5 h-5 text-white group-hover:text-black" />
                   </div>
                   {feature.count !== null && feature.count > 0 && (
-                    <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-medium rounded-full">
+                    <span className="px-2 py-1 bg-black text-white text-xs font-medium rounded-full group-hover:bg-white group-hover:text-black">
                       {feature.count}
                     </span>
                   )}
                 </div>
-                <p className="font-medium text-gray-900 dark:text-white">{feature.label}</p>
-                <p className="text-sm text-gray-500">{feature.desc}</p>
+                <p className="font-medium">{feature.label}</p>
+                <p className="text-sm opacity-70">{feature.desc}</p>
               </Link>
             ))}
           </div>
@@ -225,7 +225,7 @@ export default function Dashboard() {
         <div className="flex justify-center">
           <Link
             href="/profile"
-            className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            className="inline-flex items-center text-gray-600 hover:text-black transition-colors"
           >
             <Settings className="w-4 h-4 mr-2" />
             Manage your account settings
