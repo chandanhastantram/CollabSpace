@@ -1,11 +1,11 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document as MongooseDocument, Model } from 'mongoose';
 
 export interface IDocumentPermission {
   userId: mongoose.Types.ObjectId;
   access: 'read' | 'write' | 'admin';
 }
 
-export interface IDocument extends Document {
+export interface IDocument extends MongooseDocument {
   _id: string;
   workspaceId: mongoose.Types.ObjectId;
   title: string;
@@ -84,7 +84,7 @@ DocumentSchema.index({ workspaceId: 1, type: 1 });
 DocumentSchema.index({ createdBy: 1 });
 DocumentSchema.index({ title: 'text' });
 
-const Document: Model<IDocument> = 
+const DocumentModel: Model<IDocument> = 
   mongoose.models.Document || mongoose.model<IDocument>('Document', DocumentSchema);
 
-export default Document;
+export default DocumentModel;
