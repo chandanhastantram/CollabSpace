@@ -1,6 +1,8 @@
 // Shared demo data store for testing without MongoDB
 // This provides in-memory storage when MONGODB_URI is not set
 
+import bcrypt from 'bcryptjs';
+
 interface DemoUser {
   _id: string;
   name: string;
@@ -35,10 +37,41 @@ class DemoDataStore {
   private users: Map<string, DemoUser> = new Map();
   private workspaces: Map<string, DemoWorkspace> = new Map();
   private documents: Map<string, DemoDocument> = new Map();
+  private initialized = false;
+
+  constructor() {
+    this.initializeDefaultUser();
+  }
+
+  private async initializeDefaultUser() {
+    if (this.initialized) return;
+    
+    try {
+      // Create default demo user
+      const hashedPassword = await bcrypt.hash('demo123', 10);
+      const defaultUser: DemoUser = {
+        _id: 'demo-user-default',
+        name: 'Demo User',
+        email: 'demo@collabspace.com',
+        password: hashedPassword,
+        avatar: null,
+        role: 'user',
+        provider: 'local',
+        createdAt: new Date(),
+      };
+      
+      this.users.set(defaultUser.email.toLowerCase(), defaultUser);
+      this.initialized = true;
+      console.log('✅ Default demo user initialized: demo@collabspace.com / demo123');
+    } catch (error) {
+      console.error('Failed to initialize default user:', error);
+    }
+  }
 
   // Users
   addUser(user: DemoUser): void {
     this.users.set(user.email.toLowerCase(), user);
+    console.log(`✅ Demo user added: ${user.email}`);
   }
 
   getUser(email: string): DemoUser | undefined {
@@ -107,11 +140,13 @@ class DemoDataStore {
     };
   }
 
-  // Clear all data
+  // Clear all data but keep default user
   clear(): void {
     this.users.clear();
     this.workspaces.clear();
     this.documents.clear();
+    this.initialized = false;
+    this.initializeDefaultUser();
   }
 }
 
