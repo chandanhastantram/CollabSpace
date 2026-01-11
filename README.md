@@ -1,290 +1,170 @@
 # CollabSpace 🚀
 
-A **production-ready** real-time collaborative workspace platform built with modern web technologies. Features live document editing, presence tracking, cursor synchronization, and seamless team collaboration.
+A real-time collaborative workspace platform built with Next.js, featuring document collaboration, video conferencing, and team management.
 
-![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=for-the-badge&logo=typescript)
-![Socket.io](https://img.shields.io/badge/Socket.io-4.7-green?style=for-the-badge&logo=socket.io)
-![MongoDB](https://img.shields.io/badge/MongoDB-8.0-green?style=for-the-badge&logo=mongodb)
-![Redis](https://img.shields.io/badge/Redis-4.6-red?style=for-the-badge&logo=redis)
+![CollabSpace](https://img.shields.io/badge/Next.js-14-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue) ![Socket.io](https://img.shields.io/badge/Socket.io-4.8-green)
 
 ## ✨ Features
 
-### 🔥 Real-Time Collaboration
+### 📝 Document Collaboration
 
-- **Operational Transformation (OT)** - Advanced conflict resolution for concurrent edits
-- **Live Cursor Tracking** - See where your teammates are editing in real-time
-- **Presence Indicators** - Know who's online and active in each document
-- **Instant Synchronization** - Changes appear immediately across all connected clients
+- Real-time collaborative editing
+- Rich text editor with formatting
+- Version history
+- Document export (PDF, DOCX)
 
-### 📝 Document Management
+### 📹 Video Conferencing
 
-- **Rich Text Editor** - Powered by Quill.js with full formatting support
-- **Hierarchical Structure** - Organize documents in folders
-- **Version History** - Track changes and revert to previous versions
-- **Smart Permissions** - Role-based access control (Owner, Admin, Editor, Viewer)
+- Multi-user video calls with WebRTC
+- Screen sharing
+- In-call chat
+- Audio/video controls
 
-### 🏢 Workspace Features
+### 👥 Team Management
 
-- **Multi-Workspace Support** - Create unlimited workspaces for different teams
-- **Member Management** - Invite team members with granular permissions
-- **Activity Feed** - Track all workspace activities in real-time
-- **Notifications** - Get notified about mentions, comments, and updates
+- Workspaces with member management
+- Role-based access control
+- Invite system
+- Activity tracking
 
-### 🛡️ Enterprise-Grade Backend
+### 🎨 User Experience
 
-- **Scalable Architecture** - Built for high concurrency with Redis caching
-- **WebSocket Management** - Efficient Socket.io server with connection pooling
-- **Database Optimization** - Indexed MongoDB queries for fast performance
-- **Session Management** - Secure JWT-based authentication with refresh tokens
+- Clean, simplified dashboard
+- Dynamic avatar generation (7 styles)
+- Dark/light theme
+- Responsive design
 
-## 🏗️ Architecture
-
-```
-┌─────────────────┐
-│   Next.js App   │  ← Frontend (React, TypeScript, Tailwind)
-└────────┬────────┘
-         │
-    ┌────┴────┐
-    │         │
-┌───▼───┐ ┌──▼──────┐
-│  API  │ │ Socket  │  ← Backend Layer
-│ Routes│ │  Server │
-└───┬───┘ └──┬──────┘
-    │        │
-┌───▼────────▼───┐
-│   MongoDB      │  ← Data Layer
-│   Redis Cache  │
-└────────────────┘
-```
-
-### Tech Stack
-
-**Frontend:**
-
-- Next.js 14 (App Router)
-- TypeScript
-- Tailwind CSS
-- Socket.io Client
-- Quill.js (Rich Text Editor)
-- Zustand (State Management)
-- React Query (Data Fetching)
-
-**Backend:**
-
-- Node.js + Socket.io Server
-- MongoDB + Mongoose
-- Redis (Caching & Sessions)
-- NextAuth.js (Authentication)
-- JWT (Token Management)
-
-**DevOps:**
-
-- Vercel (Frontend Deployment)
-- Railway/Render (WebSocket Server)
-- MongoDB Atlas (Database)
-- Redis Cloud (Cache)
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+
 - MongoDB (local or Atlas)
-- Redis (local or cloud)
+- Redis (optional, for caching)
 
 ### Installation
 
-1. **Clone the repository**
-
 ```bash
-git clone https://github.com/yourusername/collabspace.git
-cd collabspace
-```
+# Clone the repository
+git clone https://github.com/chandanhastantram/CollabSpace.git
+cd CollabSpace
 
-2. **Install dependencies**
-
-```bash
+# Install dependencies
 npm install
-```
 
-3. **Set up environment variables**
-
-```bash
+# Copy environment variables
 cp .env.example .env.local
-```
+# Edit .env.local with your values
 
-Edit `.env.local` with your configuration:
-
-```env
-MONGODB_URI=mongodb+srv://...
-REDIS_URL=redis://localhost:6379
-NEXTAUTH_SECRET=your-secret-key
-JWT_SECRET=your-jwt-secret
-NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
-```
-
-4. **Run the development servers**
-
-Terminal 1 - Next.js App:
-
-```bash
+# Start development server
 npm run dev
 ```
 
-Terminal 2 - Socket.io Server:
+### Multi-User Video Calls
 
 ```bash
-npm run server
+# Terminal 1: Start Socket.io server
+npm run socket
+
+# Terminal 2: Start Next.js app
+npm run dev
 ```
 
-5. **Open your browser**
+Then open http://localhost:3000/meeting in two browser tabs!
 
-```
-http://localhost:3000
+## 🐳 Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Access the application
+open http://localhost:3000
 ```
 
 ## 📁 Project Structure
 
 ```
 CollabSpace/
-├── app/                    # Next.js app directory
-│   ├── (auth)/            # Authentication pages
-│   ├── workspace/         # Workspace pages
+├── app/                    # Next.js app router pages
 │   ├── api/               # API routes
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── document/          # Document editor components
-│   ├── workspace/         # Workspace components
-│   ├── providers/         # Context providers
-│   └── ui/                # Reusable UI components
-├── lib/                   # Utility libraries
-│   ├── db.ts              # MongoDB connection
-│   ├── redis.ts           # Redis client
-│   └── ot-engine.ts       # Operational Transformation
-├── models/                # Mongoose models
-│   ├── User.ts
-│   ├── Workspace.ts
-│   └── Document.ts
-├── server/                # Socket.io server
-│   └── index.ts           # WebSocket server
-└── types/                 # TypeScript types
+│   ├── dashboard/         # Dashboard page
+│   ├── meeting/           # Video call page
+│   └── profile/           # User profile
+├── components/             # React components
+│   ├── ui/                # UI components
+│   ├── video/             # Video call components
+│   └── widgets/           # Dashboard widgets
+├── lib/                    # Utilities and helpers
+├── hooks/                  # Custom React hooks
+├── models/                 # MongoDB models
+├── server/                 # Socket.io server
+└── types/                  # TypeScript types
 ```
 
-## 🔧 Key Components
+## 🔧 Environment Variables
 
-### Operational Transformation Engine
+| Variable                 | Description               | Required        |
+| ------------------------ | ------------------------- | --------------- |
+| `MONGODB_URI`            | MongoDB connection string | Yes             |
+| `JWT_SECRET`             | JWT signing secret        | Yes             |
+| `NEXTAUTH_SECRET`        | NextAuth secret           | Yes             |
+| `REDIS_URL`              | Redis connection URL      | No              |
+| `NEXT_PUBLIC_SOCKET_URL` | Socket.io server URL      | For video calls |
 
-The heart of real-time collaboration. Handles concurrent edits with conflict resolution:
+## 📜 Scripts
 
-```typescript
-// lib/ot-engine.ts
-- Transform operations against each other
-- Apply operations to document state
-- Compose sequential operations
-- Validate operations before applying
-```
+| Command          | Description              |
+| ---------------- | ------------------------ |
+| `npm run dev`    | Start development server |
+| `npm run build`  | Build for production     |
+| `npm run start`  | Start production server  |
+| `npm run socket` | Start Socket.io server   |
+| `npm run test`   | Run tests                |
+| `npm run lint`   | Run ESLint               |
 
-### Socket.io Server
+## 🛠️ Tech Stack
 
-Manages all real-time connections and events:
-
-```typescript
-// server/index.ts
-- Document join/leave events
-- Operation broadcasting
-- Cursor synchronization
-- Presence tracking
-- Notification delivery
-```
-
-### Redis Integration
-
-High-performance caching and session management:
-
-```typescript
-// lib/redis.ts
-- Session storage
-- User presence tracking
-- Document locking
-- Cache invalidation
-```
-
-## 🎨 Design Philosophy
-
-**Clean & Professional** - Inspired by Figma and modern SaaS applications
-
-- Minimal, uncluttered interface
-- Smooth animations and transitions
-- Consistent design system
-- Responsive on all devices
-
-**Performance First** - Optimized for speed
-
-- Redis caching for frequently accessed data
-- Database query optimization with indexes
-- Lazy loading and code splitting
-- WebSocket connection pooling
-
-**Developer Experience** - Built for maintainability
-
-- TypeScript for type safety
-- Modular component architecture
-- Comprehensive error handling
-- Clear code documentation
-
-## 🧪 Testing
-
-```bash
-# Run unit tests
-npm run test
-
-# Run E2E tests
-npm run test:e2e
-
-# Run linting
-npm run lint
-```
+- **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend:** Next.js API Routes, MongoDB, Redis
+- **Real-time:** Socket.io, WebRTC
+- **Auth:** JWT, bcrypt
+- **UI:** Lucide Icons, Framer Motion
 
 ## 📦 Deployment
 
-### Frontend (Vercel)
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Import in Vercel
+3. Add environment variables
+4. Deploy!
+
+### Docker
 
 ```bash
-vercel deploy
+docker-compose up -d
 ```
 
-### Socket.io Server (Railway)
+### Manual
 
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Deploy
-railway up
+npm run build
+npm run start
 ```
-
-### Environment Variables
-
-Make sure to set all required environment variables in your deployment platform.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open a Pull Request
 
 ## 📄 License
 
-MIT License - feel free to use this project for your portfolio or production applications.
-
-## 🙏 Acknowledgments
-
-- Built with [Next.js](https://nextjs.org/)
-- Real-time powered by [Socket.io](https://socket.io/)
-- Rich text editing with [Quill.js](https://quilljs.com/)
-- Styled with [Tailwind CSS](https://tailwindcss.com/)
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Made with ❤️ for modern teams**
-
-⭐ Star this repo if you find it useful!
+Built with ❤️ by [Chandan](https://github.com/chandanhastantram)

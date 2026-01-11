@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  # Main Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/collabspace
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-refresh-secret-key}
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-nextauth-secret}
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped
+    networks:
+      - collabspace-network
+
+  # MongoDB Database
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=collabspace
+    restart: unless-stopped
+    networks:
+      - collabspace-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - collabspace-network
+
+  # MongoDB Admin UI (optional)
+  mongo-express:
+    image: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - collabspace-network
+    profiles:
+      - dev
+
+volumes:
+  mongo-data:
+  redis-data:
+
+networks:
+  collabspace-network:
+    driver: bridge
