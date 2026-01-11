@@ -12,19 +12,18 @@ export default function NewDocumentPage() {
   const [content, setContent] = useState('');
 
   const handleSave = () => {
-    // Save logic here
     router.push('/documents');
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="border-b-2 border-black px-6 py-4">
+    <div className="min-h-screen bg-black">
+      <div className="border-b border-white/20 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link href="/documents" className="flex items-center text-black hover:opacity-70">
+          <Link href="/documents" className="flex items-center text-white hover:text-gray-300">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back
           </Link>
-          <Button onClick={handleSave} className="bg-black text-white hover:bg-gray-800">
+          <Button onClick={handleSave} className="bg-white text-black hover:bg-gray-200">
             <Save className="w-4 h-4 mr-2" />
             Save Document
           </Button>
@@ -37,13 +36,13 @@ export default function NewDocumentPage() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled Document"
-          className="w-full text-4xl font-bold border-none outline-none mb-6 text-black placeholder-gray-400"
+          className="w-full text-4xl font-bold bg-transparent border-none outline-none mb-6 text-white placeholder-gray-500"
         />
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Start writing..."
-          className="w-full min-h-[500px] text-lg border-none outline-none resize-none text-black placeholder-gray-400"
+          className="w-full min-h-[500px] text-lg bg-transparent border-none outline-none resize-none text-white placeholder-gray-500"
         />
       </div>
     </div>

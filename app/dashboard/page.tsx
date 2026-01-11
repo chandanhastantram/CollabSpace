@@ -34,7 +34,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <Spinner size="lg" />
       </div>
     );
@@ -69,49 +69,43 @@ export default function Dashboard() {
       label: 'Documents', 
       desc: 'Create and edit documents',
       href: '/documents',
-      count: 0
     },
     { 
       icon: Users, 
       label: 'Workspaces', 
       desc: 'Manage team workspaces',
       href: '/workspaces',
-      count: 0
     },
     { 
       icon: Video, 
       label: 'Meetings', 
       desc: 'Video calls & screen share',
       href: '/meeting',
-      count: null
     },
     { 
       icon: FolderOpen, 
       label: 'My Files', 
       desc: 'Browse all your files',
       href: '/files',
-      count: null
     },
     { 
       icon: MessageSquare, 
       label: 'Messages', 
       desc: 'Chat with your team',
       href: '/messages',
-      count: 0
     },
     { 
       icon: Bell, 
       label: 'Notifications', 
       desc: 'View all notifications',
       href: '/notifications',
-      count: 3
     },
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-black">
       {/* Header */}
-      <header className="bg-black border-b-2 border-black sticky top-0 z-50">
+      <header className="bg-black border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -131,7 +125,7 @@ export default function Dashboard() {
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-full pl-10 pr-4 py-2 bg-white border-2 border-white rounded-lg text-black placeholder-gray-500 outline-none focus:ring-2 focus:ring-white"
+                  className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-white/50"
                 />
               </div>
             </div>
@@ -140,7 +134,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               <Link 
                 href="/profile"
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <DynamicAvatar seed={user.email} style="avataaars" size={36} />
                 <div className="hidden md:block text-left">
@@ -163,10 +157,10 @@ export default function Dashboard() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Welcome back, {user.name?.split(' ')[0]}! 👋
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-400">
             What would you like to do today?
           </p>
         </div>
@@ -179,28 +173,25 @@ export default function Dashboard() {
               href={action.href}
               className="group relative block"
             >
-              <div className="relative h-full rounded-xl border-2 border-black p-1">
+              <div className="relative h-full rounded-xl border border-white/20 p-1">
                 <GlowingEffect
                   spread={40}
                   glow={true}
                   disabled={false}
                   proximity={64}
                   inactiveZone={0.01}
-                  borderWidth={2}
-                  variant="white"
+                  borderWidth={3}
+                  variant="default"
                 />
-                <div className="relative flex items-center p-4 bg-white rounded-lg hover:bg-black hover:text-white transition-all">
-                  <div className={cn(
-                    "w-12 h-12 bg-black rounded-lg flex items-center justify-center mr-4",
-                    "group-hover:bg-white transition-colors"
-                  )}>
-                    <action.icon className="w-6 h-6 text-white group-hover:text-black transition-colors" />
+                <div className="relative flex items-center p-4 bg-black rounded-lg hover:bg-white/5 transition-all">
+                  <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mr-4 backdrop-blur-sm">
+                    <action.icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold">{action.label}</p>
-                    <p className="text-sm opacity-70">{action.desc}</p>
+                    <p className="font-semibold text-white">{action.label}</p>
+                    <p className="text-sm text-gray-400">{action.desc}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 opacity-50" />
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
                 </div>
               </div>
             </Link>
@@ -209,7 +200,7 @@ export default function Dashboard() {
 
         {/* All Features with Glowing Effect */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-black mb-4">
+          <h2 className="text-xl font-bold text-white mb-4">
             All Features
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -219,35 +210,24 @@ export default function Dashboard() {
                 href={feature.href}
                 className="group relative block min-h-[10rem]"
               >
-                <div className="relative h-full rounded-xl border-2 border-black p-1">
+                <div className="relative h-full rounded-xl border border-white/20 p-1">
                   <GlowingEffect
                     spread={40}
                     glow={true}
                     disabled={false}
                     proximity={64}
                     inactiveZone={0.01}
-                    borderWidth={2}
-                    variant="white"
+                    borderWidth={3}
+                    variant="default"
                   />
-                  <div className="relative h-full p-4 bg-white rounded-lg hover:bg-black hover:text-white transition-all">
+                  <div className="relative h-full p-4 bg-black rounded-lg hover:bg-white/5 transition-all">
                     <div className="flex items-center justify-between mb-3">
-                      <div className={cn(
-                        "w-10 h-10 bg-black rounded-lg flex items-center justify-center",
-                        "group-hover:bg-white transition-colors"
-                      )}>
-                        <feature.icon className="w-5 h-5 text-white group-hover:text-black transition-colors" />
+                      <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                        <feature.icon className="w-5 h-5 text-white" />
                       </div>
-                      {feature.count !== null && feature.count > 0 && (
-                        <span className={cn(
-                          "px-2 py-1 bg-black text-white text-xs font-medium rounded-full",
-                          "group-hover:bg-white group-hover:text-black transition-colors"
-                        )}>
-                          {feature.count}
-                        </span>
-                      )}
                     </div>
-                    <p className="font-medium mb-1">{feature.label}</p>
-                    <p className="text-sm opacity-70">{feature.desc}</p>
+                    <p className="font-medium text-white mb-1">{feature.label}</p>
+                    <p className="text-sm text-gray-400">{feature.desc}</p>
                   </div>
                 </div>
               </Link>
@@ -259,7 +239,7 @@ export default function Dashboard() {
         <div className="flex justify-center">
           <Link
             href="/profile"
-            className="inline-flex items-center text-gray-600 hover:text-black transition-colors"
+            className="inline-flex items-center text-gray-400 hover:text-white transition-colors"
           >
             <Settings className="w-4 h-4 mr-2" />
             Manage your account settings
