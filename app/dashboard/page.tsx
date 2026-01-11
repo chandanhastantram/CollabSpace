@@ -4,7 +4,9 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { DynamicAvatar } from '@/components/widgets/DynamicAvatar';
+import { GlowingEffect } from '@/components/ui/glowing-effect';
 import { Spinner } from '@/components/ui/loading';
+import { cn } from '@/lib/utils';
 import { 
   FileText, 
   Users, 
@@ -46,21 +48,18 @@ export default function Dashboard() {
       label: 'New Document', 
       desc: 'Create a new document',
       href: '/documents/new',
-      color: 'bg-black'
     },
     { 
       icon: Users, 
       label: 'New Workspace', 
       desc: 'Create a team workspace',
       href: '/workspaces/new',
-      color: 'bg-black'
     },
     { 
       icon: Video, 
       label: 'Start Meeting', 
       desc: 'Start a video call',
       href: '/meeting',
-      color: 'bg-black'
     },
   ];
 
@@ -172,27 +171,43 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-4 mb-10">
+        {/* Quick Actions with Glowing Effect */}
+        <div className="grid md:grid-cols-3 gap-6 mb-10">
           {quickActions.map((action) => (
             <Link
               key={action.label}
               href={action.href}
-              className="group flex items-center p-4 bg-white border-2 border-black rounded-lg hover:bg-black hover:text-white transition-all"
+              className="group relative block"
             >
-              <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mr-4 group-hover:bg-white`}>
-                <action.icon className="w-6 h-6 text-white group-hover:text-black" />
+              <div className="relative h-full rounded-xl border-2 border-black p-1">
+                <GlowingEffect
+                  spread={40}
+                  glow={true}
+                  disabled={false}
+                  proximity={64}
+                  inactiveZone={0.01}
+                  borderWidth={2}
+                  variant="white"
+                />
+                <div className="relative flex items-center p-4 bg-white rounded-lg hover:bg-black hover:text-white transition-all">
+                  <div className={cn(
+                    "w-12 h-12 bg-black rounded-lg flex items-center justify-center mr-4",
+                    "group-hover:bg-white transition-colors"
+                  )}>
+                    <action.icon className="w-6 h-6 text-white group-hover:text-black transition-colors" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">{action.label}</p>
+                    <p className="text-sm opacity-70">{action.desc}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 opacity-50" />
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="font-semibold">{action.label}</p>
-                <p className="text-sm opacity-70">{action.desc}</p>
-              </div>
-              <ChevronRight className="w-5 h-5 opacity-50" />
             </Link>
           ))}
         </div>
 
-        {/* All Features */}
+        {/* All Features with Glowing Effect */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-black mb-4">
             All Features
@@ -202,20 +217,39 @@ export default function Dashboard() {
               <Link
                 key={feature.label}
                 href={feature.href}
-                className="group p-4 bg-white border-2 border-black rounded-lg hover:bg-black hover:text-white transition-all"
+                className="group relative block min-h-[10rem]"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center group-hover:bg-white">
-                    <feature.icon className="w-5 h-5 text-white group-hover:text-black" />
+                <div className="relative h-full rounded-xl border-2 border-black p-1">
+                  <GlowingEffect
+                    spread={40}
+                    glow={true}
+                    disabled={false}
+                    proximity={64}
+                    inactiveZone={0.01}
+                    borderWidth={2}
+                    variant="white"
+                  />
+                  <div className="relative h-full p-4 bg-white rounded-lg hover:bg-black hover:text-white transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={cn(
+                        "w-10 h-10 bg-black rounded-lg flex items-center justify-center",
+                        "group-hover:bg-white transition-colors"
+                      )}>
+                        <feature.icon className="w-5 h-5 text-white group-hover:text-black transition-colors" />
+                      </div>
+                      {feature.count !== null && feature.count > 0 && (
+                        <span className={cn(
+                          "px-2 py-1 bg-black text-white text-xs font-medium rounded-full",
+                          "group-hover:bg-white group-hover:text-black transition-colors"
+                        )}>
+                          {feature.count}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-medium mb-1">{feature.label}</p>
+                    <p className="text-sm opacity-70">{feature.desc}</p>
                   </div>
-                  {feature.count !== null && feature.count > 0 && (
-                    <span className="px-2 py-1 bg-black text-white text-xs font-medium rounded-full group-hover:bg-white group-hover:text-black">
-                      {feature.count}
-                    </span>
-                  )}
                 </div>
-                <p className="font-medium">{feature.label}</p>
-                <p className="text-sm opacity-70">{feature.desc}</p>
               </Link>
             ))}
           </div>
