@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import connectDB from '@/lib/db';
 import Document from '@/models/Document';
 import Workspace from '@/models/Workspace';
 import { requireAuth } from '@/middleware/auth';
@@ -14,7 +14,7 @@ export async function GET(
       await connectDB();
 
       const document = await Document.findById(params.id)
-        .populate('workspace')
+        .populate('workspaceId')
         .populate('createdBy', 'name email avatar')
         .populate('lastEditedBy', 'name email avatar');
 
@@ -26,7 +26,7 @@ export async function GET(
       }
 
       // Check workspace access
-      const workspace = await Workspace.findById(document.workspace);
+      const workspace = await Workspace.findById(document.workspaceId);
       if (!workspace) {
         return NextResponse.json(
           { error: 'Workspace not found' },
@@ -71,7 +71,7 @@ export async function PATCH(
 
       await connectDB();
 
-      const document = await Document.findById(params.id).populate('workspace');
+      const document = await Document.findById(params.id).populate('workspaceId');
 
       if (!document) {
         return NextResponse.json(
@@ -81,7 +81,14 @@ export async function PATCH(
       }
 
       // Check permissions
-      const workspace = await Workspace.findById(document.workspace);
+      const workspace = await Workspace.findById(document.workspaceId);
+      if (!workspace) {
+        return NextResponse.json(
+          { error: 'Workspace not found' },
+          { status: 404 }
+        );
+      }
+      
       const member = workspace.members.find(
         (m: any) => m.user.toString() === authRequest.user!.userId
       );
@@ -96,7 +103,7 @@ export async function PATCH(
       // Update document
       if (title !== undefined) document.title = title;
       if (content !== undefined) document.content = content;
-      document.lastEditedBy = authRequest.user!.userId;
+      document.lastEditedBy = authRequest.user!.userId as any;
 
       await document.save();
 
@@ -127,7 +134,7 @@ export async function DELETE(
     try {
       await connectDB();
 
-      const document = await Document.findById(params.id).populate('workspace');
+      const document = await Document.findById(params.id).populate('workspaceId');
 
       if (!document) {
         return NextResponse.json(
@@ -137,7 +144,14 @@ export async function DELETE(
       }
 
       // Check permissions (owner or admin can delete)
-      const workspace = await Workspace.findById(document.workspace);
+      const workspace = await Workspace.findById(document.workspaceId);
+      if (!workspace) {
+        return NextResponse.json(
+          { error: 'Workspace not found' },
+          { status: 404 }
+        );
+      }
+      
       const member = workspace.members.find(
         (m: any) => m.user.toString() === authRequest.user!.userId
       );
