@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Spinner } from '@/components/ui/loading';
 
@@ -19,19 +19,19 @@ import 'react-quill/dist/quill.snow.css';
 interface CollaborativeEditorProps {
   documentId: string;
   initialContent?: string;
-  onChange?: (content: string) => void;
+  onSave?: (content: string) => void;
   readOnly?: boolean;
 }
 
 export function CollaborativeEditor({
   documentId,
   initialContent = '',
-  onChange,
+  onSave,
   readOnly = false,
 }: CollaborativeEditorProps) {
   const [content, setContent] = useState(initialContent);
   const [isLoading, setIsLoading] = useState(true);
-  const quillRef = useRef<any>(null);
+  // const quillRef = useRef<any>(null); // removed ref as not needed
 
   useEffect(() => {
     // Simulate loading
@@ -49,7 +49,7 @@ export function CollaborativeEditor({
 
   const handleChange = (value: string) => {
     setContent(value);
-    onChange?.(value);
+    onSave?.(value);
   };
 
   const modules = {
@@ -162,7 +162,6 @@ export function CollaborativeEditor({
         }
       `}</style>
       <ReactQuill
-        ref={quillRef}
         value={content}
         onChange={handleChange}
         modules={modules}

@@ -16,7 +16,6 @@ import {
   getRandomActivity,
   getRandomDogImage,
   getRandomCatImage,
-  predictAge,
   getIPLocation,
   getPublicHolidays,
   getPicsumImage,
