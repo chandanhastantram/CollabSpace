@@ -1,31 +1,6 @@
 {
   "version": 2,
-  "name": "collabspace",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXT_PUBLIC_APP_URL": "@next_public_app_url",
-    "NEXT_PUBLIC_SOCKET_URL": "@next_public_socket_url"
-  },
   "regions": ["bom1"],
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
@@ -56,12 +31,6 @@
           "value": "no-store, max-age=0"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/socket.io/:path*",
-      "destination": "${NEXT_PUBLIC_SOCKET_URL}/socket.io/:path*"
     }
   ]
 }
