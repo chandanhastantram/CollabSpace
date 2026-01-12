@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { DynamicAvatar } from '@/components/widgets/DynamicAvatar';
 import { GlowingEffect } from '@/components/ui/glowing-effect';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Spinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 import { 
@@ -139,6 +140,7 @@ export default function Dashboard() {
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
+              <NotificationBell />
               <Link 
                 href="/profile"
                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
