@@ -18,7 +18,8 @@ import {
   Bell,
   Search,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  BarChart2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -99,6 +100,12 @@ export default function Dashboard() {
       label: 'Notifications', 
       desc: 'View all notifications',
       href: '/notifications',
+    },
+    { 
+      icon: BarChart2, 
+      label: 'Analytics', 
+      desc: 'View usage statistics',
+      href: '/analytics',
     },
   ];
 
