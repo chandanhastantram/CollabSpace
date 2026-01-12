@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
       // Find workspaces where user is a member
       const query: any = {
-        'members.user': authRequest.user!.userId,
+        'members.userId': authRequest.user!.userId,
       };
 
       if (role) {
@@ -28,21 +28,22 @@ export async function GET(request: NextRequest) {
       }
 
       const workspaces = await Workspace.find(query)
-        .populate('members.user', 'name email avatar')
-        .populate('owner', 'name email avatar')
+        .populate('members.userId', 'name email avatar')
+        .populate('ownerId', 'name email avatar')
         .sort({ updatedAt: -1 });
 
       // Add member count and user's role to each workspace
       const workspacesWithStats = workspaces.map((workspace) => {
         const userMember = workspace.members.find(
-          (m: any) => m.user._id.toString() === authRequest.user!.userId
+          (m: any) => m.userId?._id?.toString() === authRequest.user!.userId ||
+                      m.userId?.toString() === authRequest.user!.userId
         );
 
         return {
           id: workspace._id,
           name: workspace.name,
           description: workspace.description,
-          owner: workspace.owner,
+          owner: workspace.ownerId,
           memberCount: workspace.members.length,
           userRole: userMember?.role || 'viewer',
           createdAt: workspace.createdAt,
@@ -84,10 +85,10 @@ export async function POST(request: NextRequest) {
       const workspace = await Workspace.create({
         name,
         description: description || '',
-        owner: authRequest.user!.userId,
+        ownerId: authRequest.user!.userId,
         members: [
           {
-            user: authRequest.user!.userId,
+            userId: authRequest.user!.userId,
             role: 'owner',
             joinedAt: new Date(),
           },
@@ -100,8 +101,8 @@ export async function POST(request: NextRequest) {
       });
 
       const populatedWorkspace = await Workspace.findById(workspace._id)
-        .populate('owner', 'name email avatar')
-        .populate('members.user', 'name email avatar');
+        .populate('ownerId', 'name email avatar')
+        .populate('members.userId', 'name email avatar');
 
       return NextResponse.json(
         {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import connectDB from '@/lib/db';
 import Workspace from '@/models/Workspace';
 import User from '@/models/User';
 import { requireAuth } from '@/middleware/auth';
@@ -14,7 +14,7 @@ export async function GET(
       await connectDB();
 
       const workspace = await Workspace.findById(params.id)
-        .populate('members.user', 'name email avatar');
+        .populate('members.userId', 'name email avatar');
 
       if (!workspace) {
         return NextResponse.json(
@@ -25,7 +25,8 @@ export async function GET(
 
       // Check if user is a member
       const isMember = workspace.members.some(
-        (m: any) => m.user._id.toString() === authRequest.user!.userId
+        (m: any) => m.userId?._id?.toString() === authRequest.user!.userId ||
+                    m.userId?.toString() === authRequest.user!.userId
       );
 
       if (!isMember) {
@@ -79,7 +80,7 @@ export async function POST(
 
       // Check if requester can invite
       const requesterMember = workspace.members.find(
-        (m: any) => m.user.toString() === authRequest.user!.userId
+        (m: any) => m.userId?.toString() === authRequest.user!.userId
       );
 
       if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
@@ -91,7 +92,7 @@ export async function POST(
 
       // Check if user already a member
       const existingMember = workspace.members.find(
-        (m: any) => m.user.toString() === userId
+        (m: any) => m.userId?.toString() === userId
       );
 
       if (existingMember) {
@@ -103,7 +104,7 @@ export async function POST(
 
       // Add member
       workspace.members.push({
-        user: userId,
+        userId: userId,
         role,
         joinedAt: new Date(),
       });
@@ -116,7 +117,7 @@ export async function POST(
       });
 
       const updatedWorkspace = await Workspace.findById(workspace._id)
-        .populate('members.user', 'name email avatar');
+        .populate('members.userId', 'name email avatar');
 
       return NextResponse.json({
         success: true,
@@ -162,7 +163,7 @@ export async function PATCH(
 
       // Only owner and admin can change roles
       const requesterMember = workspace.members.find(
-        (m: any) => m.user.toString() === authRequest.user!.userId
+        (m: any) => m.userId?.toString() === authRequest.user!.userId
       );
 
       if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
@@ -173,7 +174,7 @@ export async function PATCH(
       }
 
       // Cannot change owner role
-      if (workspace.owner.toString() === userId && role !== 'owner') {
+      if (workspace.ownerId?.toString() === userId && role !== 'owner') {
         return NextResponse.json(
           { error: 'Cannot change owner role' },
           { status: 400 }
@@ -182,7 +183,7 @@ export async function PATCH(
 
       // Update member role
       const memberIndex = workspace.members.findIndex(
-        (m: any) => m.user.toString() === userId
+        (m: any) => m.userId?.toString() === userId
       );
 
       if (memberIndex === -1) {
@@ -196,7 +197,7 @@ export async function PATCH(
       await workspace.save();
 
       const updatedWorkspace = await Workspace.findById(workspace._id)
-        .populate('members.user', 'name email avatar');
+        .populate('members.userId', 'name email avatar');
 
       return NextResponse.json({
         success: true,
@@ -241,7 +242,7 @@ export async function DELETE(
       }
 
       // Cannot remove owner
-      if (workspace.owner.toString() === userId) {
+      if (workspace.ownerId?.toString() === userId) {
         return NextResponse.json(
           { error: 'Cannot remove workspace owner' },
           { status: 400 }
@@ -250,7 +251,7 @@ export async function DELETE(
 
       // Only owner and admin can remove members
       const requesterMember = workspace.members.find(
-        (m: any) => m.user.toString() === authRequest.user!.userId
+        (m: any) => m.userId?.toString() === authRequest.user!.userId
       );
 
       if (!requesterMember || !['owner', 'admin'].includes(requesterMember.role)) {
@@ -262,7 +263,7 @@ export async function DELETE(
 
       // Remove member
       workspace.members = workspace.members.filter(
-        (m: any) => m.user.toString() !== userId
+        (m: any) => m.userId?.toString() !== userId
       );
 
       await workspace.save();

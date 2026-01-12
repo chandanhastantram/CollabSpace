@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import connectDB from '@/lib/db';
 import Workspace from '@/models/Workspace';
 import User from '@/models/User';
 import { requireAuth } from '@/middleware/auth';
@@ -14,8 +14,8 @@ export async function GET(
       await connectDB();
 
       const workspace = await Workspace.findById(params.id)
-        .populate('owner', 'name email avatar')
-        .populate('members.user', 'name email avatar');
+        .populate('ownerId', 'name email avatar')
+        .populate('members.userId', 'name email avatar');
 
       if (!workspace) {
         return NextResponse.json(
@@ -26,7 +26,8 @@ export async function GET(
 
       // Check if user is a member
       const isMember = workspace.members.some(
-        (m: any) => m.user._id.toString() === authRequest.user!.userId
+        (m: any) => m.userId?._id?.toString() === authRequest.user!.userId ||
+                    m.userId?.toString() === authRequest.user!.userId
       );
 
       if (!isMember) {
@@ -73,7 +74,7 @@ export async function PATCH(
 
       // Check if user is owner or admin
       const userMember = workspace.members.find(
-        (m: any) => m.user.toString() === authRequest.user!.userId
+        (m: any) => m.userId?.toString() === authRequest.user!.userId
       );
 
       if (!userMember || !['owner', 'admin'].includes(userMember.role)) {
@@ -90,8 +91,8 @@ export async function PATCH(
       await workspace.save();
 
       const updatedWorkspace = await Workspace.findById(workspace._id)
-        .populate('owner', 'name email avatar')
-        .populate('members.user', 'name email avatar');
+        .populate('ownerId', 'name email avatar')
+        .populate('members.userId', 'name email avatar');
 
       return NextResponse.json({
         success: true,
@@ -126,7 +127,7 @@ export async function DELETE(
       }
 
       // Only owner can delete
-      if (workspace.owner.toString() !== authRequest.user!.userId) {
+      if (workspace.ownerId?.toString() !== authRequest.user!.userId) {
         return NextResponse.json(
           { error: 'Only workspace owner can delete' },
           { status: 403 }
