@@ -34,9 +34,6 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   
-  // Output standalone for Docker
-  output: 'standalone',
-  
   // Ignore ESLint and TypeScript errors during build
   eslint: {
     ignoreDuringBuilds: true,
