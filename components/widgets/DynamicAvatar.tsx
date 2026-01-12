@@ -1,8 +1,5 @@
 "use client";
 
-import Image from 'next/image';
-import { dicebearAPI, robohashAPI } from '@/lib/publicAPIs';
-
 interface AvatarProps {
   seed: string;
   style?: 'initials' | 'pixel' | 'lorelei' | 'bottts' | 'avataaars' | 'robot' | 'monster';
@@ -10,25 +7,35 @@ interface AvatarProps {
   className?: string;
 }
 
+// DiceBear Avatar URLs
+const getDicebearUrl = (style: string, seed: string): string => {
+  return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
+};
+
+// Robohash URLs
+const getRobohashUrl = (type: number, seed: string): string => {
+  return `https://robohash.org/${encodeURIComponent(seed)}?set=set${type}&size=200x200`;
+};
+
 export function DynamicAvatar({ seed, style = 'initials', size = 40, className = '' }: AvatarProps) {
   const getAvatarUrl = () => {
     switch (style) {
       case 'initials':
-        return dicebearAPI.getInitials(seed);
+        return getDicebearUrl('initials', seed);
       case 'pixel':
-        return dicebearAPI.getPixelArt(seed);
+        return getDicebearUrl('pixel-art', seed);
       case 'lorelei':
-        return dicebearAPI.getLorelei(seed);
+        return getDicebearUrl('lorelei', seed);
       case 'bottts':
-        return dicebearAPI.getBottts(seed);
+        return getDicebearUrl('bottts', seed);
       case 'avataaars':
-        return dicebearAPI.getAvataaars(seed);
+        return getDicebearUrl('avataaars', seed);
       case 'robot':
-        return robohashAPI.getRobot(seed);
+        return getRobohashUrl(1, seed);
       case 'monster':
-        return robohashAPI.getMonster(seed);
+        return getRobohashUrl(4, seed);
       default:
-        return dicebearAPI.getInitials(seed);
+        return getDicebearUrl('initials', seed);
     }
   };
 
@@ -67,10 +74,10 @@ export function AvatarPicker({
         <button
           key={style}
           onClick={() => onSelect(style!)}
-          className="flex flex-col items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors"
+          className="flex flex-col items-center p-3 rounded-lg border border-white/20 hover:border-white/50 transition-colors"
         >
           <DynamicAvatar seed={seed} style={style} size={48} />
-          <span className="text-xs text-gray-600 dark:text-gray-400 mt-2">{name}</span>
+          <span className="text-xs text-gray-400 mt-2">{name}</span>
         </button>
       ))}
     </div>
