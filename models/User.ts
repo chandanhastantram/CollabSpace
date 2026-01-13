@@ -1,12 +1,14 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
-  _id: string;
+  _id: mongoose.Types.ObjectId;
   email: string;
   name: string;
   avatar?: string;
   password?: string;
   provider: 'email' | 'google' | 'github';
+  providerId?: string;
+  emailVerified?: boolean;
   role: 'user' | 'admin' | 'superadmin';
   workspaces: mongoose.Types.ObjectId[];
   settings: {
@@ -43,6 +45,13 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ['email', 'google', 'github'],
       default: 'email',
+    },
+    providerId: {
+      type: String,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
     },
     role: {
       type: String,
