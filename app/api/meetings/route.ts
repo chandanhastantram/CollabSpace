@@ -1,112 +1,154 @@
 import { NextRequest, NextResponse } from 'next/server';
-import connectDB from '@/lib/db';
-import Meeting from '@/models/Meeting';
-import Workspace from '@/models/Workspace';
-import { requireAuth } from '@/middleware/auth';
 
-// List meetings
+const DAILY_API_KEY = process.env.DAILY_API_KEY || '';
+const DAILY_API_URL = 'https://api.daily.co/v1';
+
+// Create a new meeting room
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { name, privacy = 'public', properties = {} } = body;
+
+    // Create room via Daily.co API
+    const response = await fetch(`${DAILY_API_URL}/rooms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DAILY_API_KEY}`,
+      },
+      body: JSON.stringify({
+        name: name || undefined, // Let Daily generate if not provided
+        privacy,
+        properties: {
+          enable_screenshare: true,
+          enable_chat: true,
+          enable_knocking: false,
+          start_video_off: false,
+          start_audio_off: false,
+          max_participants: 10,
+          ...properties,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(
+        { error: error.info || 'Failed to create room' },
+        { status: response.status }
+      );
+    }
+
+    const room = await response.json();
+
+    return NextResponse.json({
+      success: true,
+      room: {
+        url: room.url,
+        name: room.name,
+        created_at: room.created_at,
+        config: room.config,
+      },
+    });
+  } catch (error: any) {
+    console.error('Create meeting error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// Get meeting room details
 export async function GET(request: NextRequest) {
-  return requireAuth(request, async (authRequest) => {
-    try {
-      const { searchParams } = new URL(request.url);
-      const workspaceId = searchParams.get('workspaceId');
+  try {
+    const { searchParams } = new URL(request.url);
+    const roomName = searchParams.get('name');
 
-      if (!workspaceId) {
+    if (!roomName) {
+      return NextResponse.json(
+        { error: 'Room name is required' },
+        { status: 400 }
+      );
+    }
+
+    const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}`, {
+      headers: {
+        'Authorization': `Bearer ${DAILY_API_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
         return NextResponse.json(
-          { error: 'Workspace ID is required' },
-          { status: 400 }
-        );
-      }
-
-      await connectDB();
-
-      // Verify workspace access
-      const workspace = await Workspace.findById(workspaceId);
-      if (!workspace) {
-        return NextResponse.json(
-          { error: 'Workspace not found' },
+          { error: 'Room not found' },
           { status: 404 }
         );
       }
-
-      const isMember = workspace.members.some(
-        (m: any) => m.user.toString() === authRequest.user!.userId
-      );
-
-      if (!isMember) {
-        return NextResponse.json(
-          { error: 'Access denied' },
-          { status: 403 }
-        );
-      }
-
-      const meetings = await Meeting.find({ workspace: workspaceId })
-        .populate('host', 'name email avatar')
-        .populate('participants', 'name email avatar')
-        .sort({ startTime: 1 });
-
-      return NextResponse.json({
-        success: true,
-        meetings,
-      });
-    } catch (error) {
-      console.error('List meetings error:', error);
+      const error = await response.json();
       return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
+        { error: error.info || 'Failed to get room' },
+        { status: response.status }
       );
     }
-  });
+
+    const room = await response.json();
+
+    return NextResponse.json({
+      success: true,
+      room: {
+        url: room.url,
+        name: room.name,
+        created_at: room.created_at,
+        config: room.config,
+      },
+    });
+  } catch (error: any) {
+    console.error('Get meeting error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }
 
-// Create meeting
-export async function POST(request: NextRequest) {
-  return requireAuth(request, async (authRequest) => {
-    try {
-      const body = await request.json();
-      const { workspaceId, title, description, startTime, endTime, participants } = body;
+// Delete a meeting room
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const roomName = searchParams.get('name');
 
-      if (!workspaceId || !title || !startTime || !endTime) {
-        return NextResponse.json(
-          { error: 'Required fields missing' },
-          { status: 400 }
-        );
-      }
-
-      await connectDB();
-
-      // Generate unique meeting link
-      const meetingLink = `${Math.random().toString(36).substring(2, 15)}`;
-
-      const meeting = await Meeting.create({
-        workspace: workspaceId,
-        title,
-        description: description || '',
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-        host: authRequest.user!.userId,
-        participants: participants || [],
-        meetingLink,
-        status: 'scheduled',
-      });
-
-      const populatedMeeting = await Meeting.findById(meeting._id)
-        .populate('host', 'name email avatar')
-        .populate('participants', 'name email avatar');
-
+    if (!roomName) {
       return NextResponse.json(
-        {
-          success: true,
-          meeting: populatedMeeting,
-        },
-        { status: 201 }
-      );
-    } catch (error) {
-      console.error('Create meeting error:', error);
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
+        { error: 'Room name is required' },
+        { status: 400 }
       );
     }
-  });
+
+    const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${DAILY_API_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      return NextResponse.json(
+        { error: error.info || 'Failed to delete room' },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Room deleted successfully',
+    });
+  } catch (error: any) {
+    console.error('Delete meeting error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }

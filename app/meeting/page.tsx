@@ -1,151 +1,230 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { VideoGrid } from '@/components/video/VideoGrid';
-import { VideoControls } from '@/components/video/VideoControls';
-import { getUserMedia, getScreenShare, stopMediaStream, toggleTrack } from '@/lib/webrtc';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { useSocket } from '@/hooks/useSocket';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/loading';
-import { Video, Copy, Users, CheckCircle, MessageSquare, Send } from 'lucide-react';
+import DailyIframe from '@daily-co/daily-js';
+import { 
+  Video, 
+  Mic, 
+  MicOff, 
+  VideoOff, 
+  Monitor, 
+  PhoneOff,
+  Copy,
+  CheckCircle,
+  Users,
+  MessageSquare
+} from 'lucide-react';
 
 export default function MeetingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isInCall, setIsInCall] = useState(false);
-  const [meetingId, setMeetingId] = useState<string>('');
+  const callFrameRef = useRef<any>(null);
+  const [roomUrl, setRoomUrl] = useState<string>('');
+  const [roomName, setRoomName] = useState<string>('');
+  const [isJoined, setIsJoined] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [showChat, setShowChat] = useState(false);
-  const [chatInput, setChatInput] = useState('');
+  
+  // Call state
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [participants, setParticipants] = useState<any[]>([]);
 
-  // Socket connection for multi-user
-  const { 
-    participants, 
-    isConnected, 
-    chatMessages, 
-    toggleAudio: notifyAudioToggle,
-    toggleVideo: notifyVideoToggle,
-    sendMessage 
-  } = useSocket({
-    roomId: isInCall ? meetingId : '',
-    userId: user?.id || '',
-    userName: user?.name || 'Guest',
-    localStream,
-  });
-
-  // Get meeting ID from URL or generate new
+  // Get room ID from URL or generate new
   useEffect(() => {
-    const urlId = searchParams.get('id');
-    if (urlId) {
-      setMeetingId(urlId);
+    const urlRoomId = searchParams.get('id');
+    if (urlRoomId) {
+      setRoomName(urlRoomId);
     } else {
-      const id = `meet-${Date.now().toString(36)}`;
-      setMeetingId(id);
+      const newRoomId = `meet-${Date.now().toString(36)}`;
+      setRoomName(newRoomId);
     }
   }, [searchParams]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopMediaStream(localStream);
-      stopMediaStream(screenStream);
-    };
-  }, [localStream, screenStream]);
+  // Create or join room
+  const joinMeeting = async () => {
+    if (!roomName) return;
+    
+    setIsLoading(true);
+    setError('');
 
-  const startCall = async () => {
     try {
-      setError('');
-      const stream = await getUserMedia(true, true);
-      setLocalStream(stream);
-      setIsInCall(true);
+      // Create room if it doesn't exist
+      const createResponse = await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: roomName }),
+      });
+
+      let room;
+      if (createResponse.ok) {
+        const data = await createResponse.json();
+        room = data.room;
+      } else {
+        // Room might already exist, try to get it
+        const getResponse = await fetch(`/api/meetings?name=${roomName}`);
+        if (getResponse.ok) {
+          const data = await getResponse.json();
+          room = data.room;
+        } else {
+          throw new Error('Failed to create or join room');
+        }
+      }
+
+      setRoomUrl(room.url);
+
+      // Get meeting token
+      const tokenResponse = await fetch('/api/meetings/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomName: roomName,
+          userName: user?.name || 'Guest',
+          isOwner: !searchParams.get('id'), // Owner if creating new room
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to get meeting token');
+      }
+
+      const { token } = await tokenResponse.json();
+
+      // Create Daily call frame
+      const callFrame = DailyIframe.createFrame({
+        iframeStyle: {
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          width: '100%',
+          height: '100%',
+          border: '0',
+        },
+        showLeaveButton: false,
+        showFullscreenButton: true,
+      });
+
+      callFrameRef.current = callFrame;
+
+      // Set up event listeners
+      callFrame
+        .on('joined-meeting', handleJoinedMeeting)
+        .on('left-meeting', handleLeftMeeting)
+        .on('participant-joined', handleParticipantJoined)
+        .on('participant-left', handleParticipantLeft)
+        .on('error', handleError);
+
+      // Join the call
+      await callFrame.join({ url: room.url, token });
+      setIsJoined(true);
     } catch (err: any) {
-      setError('Could not access camera/microphone. Please allow permissions.');
-      console.error(err);
+      console.error('Join meeting error:', err);
+      setError(err.message || 'Failed to join meeting');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const toggleAudio = () => {
-    if (localStream) {
-      toggleTrack(localStream, 'audio', !isAudioEnabled);
-      setIsAudioEnabled(!isAudioEnabled);
-      notifyAudioToggle(!isAudioEnabled);
+  // Event handlers
+  const handleJoinedMeeting = useCallback(() => {
+    console.log('Joined meeting');
+    setIsJoined(true);
+  }, []);
+
+  const handleLeftMeeting = useCallback(() => {
+    console.log('Left meeting');
+    setIsJoined(false);
+    router.push('/dashboard');
+  }, [router]);
+
+  const handleParticipantJoined = useCallback((event: any) => {
+    console.log('Participant joined:', event.participant);
+    setParticipants(prev => [...prev, event.participant]);
+  }, []);
+
+  const handleParticipantLeft = useCallback((event: any) => {
+    console.log('Participant left:', event.participant);
+    setParticipants(prev => 
+      prev.filter(p => p.session_id !== event.participant.session_id)
+    );
+  }, []);
+
+  const handleError = useCallback((error: any) => {
+    console.error('Daily error:', error);
+    setError(error.errorMsg || 'An error occurred');
+  }, []);
+
+  // Call controls
+  const toggleMute = () => {
+    if (callFrameRef.current) {
+      callFrameRef.current.setLocalAudio(!isMuted);
+      setIsMuted(!isMuted);
     }
   };
 
   const toggleVideo = () => {
-    if (localStream) {
-      toggleTrack(localStream, 'video', !isVideoEnabled);
-      setIsVideoEnabled(!isVideoEnabled);
-      notifyVideoToggle(!isVideoEnabled);
+    if (callFrameRef.current) {
+      callFrameRef.current.setLocalVideo(!isVideoOff);
+      setIsVideoOff(!isVideoOff);
     }
   };
 
   const toggleScreenShare = async () => {
-    if (isScreenSharing) {
-      stopMediaStream(screenStream);
-      setScreenStream(null);
-      setIsScreenSharing(false);
-    } else {
-      try {
-        const stream = await getScreenShare();
-        setScreenStream(stream);
+    if (callFrameRef.current) {
+      if (isScreenSharing) {
+        await callFrameRef.current.stopScreenShare();
+        setIsScreenSharing(false);
+      } else {
+        await callFrameRef.current.startScreenShare();
         setIsScreenSharing(true);
-        
-        stream.getVideoTracks()[0].onended = () => {
-          stopMediaStream(stream);
-          setScreenStream(null);
-          setIsScreenSharing(false);
-        };
-      } catch (err) {
-        console.error('Screen share error:', err);
       }
     }
   };
 
-  const leaveCall = () => {
-    stopMediaStream(localStream);
-    stopMediaStream(screenStream);
-    setLocalStream(null);
-    setScreenStream(null);
-    setIsInCall(false);
-    setIsScreenSharing(false);
+  const leaveMeeting = () => {
+    if (callFrameRef.current) {
+      callFrameRef.current.leave();
+      callFrameRef.current.destroy();
+      callFrameRef.current = null;
+    }
+    setIsJoined(false);
     router.push('/dashboard');
   };
 
   const copyMeetingLink = () => {
-    const link = `${window.location.origin}/meeting?id=${meetingId}`;
+    const link = `${window.location.origin}/meeting?id=${roomName}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSendMessage = () => {
-    if (chatInput.trim()) {
-      sendMessage(chatInput);
-      setChatInput('');
-    }
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (callFrameRef.current) {
+        callFrameRef.current.destroy();
+      }
+    };
+  }, []);
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <Spinner size="lg" />
       </div>
     );
   }
 
   // Pre-call lobby
-  if (!isInCall) {
+  if (!isJoined) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800 p-8">
@@ -171,7 +250,7 @@ export default function MeetingPage() {
             <div className="flex items-center space-x-2">
               <input
                 type="text"
-                value={meetingId}
+                value={roomName}
                 readOnly
                 className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm font-mono"
               />
@@ -196,11 +275,21 @@ export default function MeetingPage() {
           )}
 
           <Button
-            onClick={startCall}
+            onClick={joinMeeting}
+            disabled={isLoading}
             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3"
           >
-            <Video className="w-5 h-5 mr-2" />
-            {searchParams.get('id') ? 'Join Call' : 'Start Call'}
+            {isLoading ? (
+              <>
+                <Spinner size="sm" className="mr-2" />
+                Joining...
+              </>
+            ) : (
+              <>
+                <Video className="w-5 h-5 mr-2" />
+                {searchParams.get('id') ? 'Join Call' : 'Start Call'}
+              </>
+            )}
           </Button>
 
           <div className="mt-6 text-center">
@@ -217,104 +306,64 @@ export default function MeetingPage() {
     );
   }
 
-  // In-call view
+  // In-call view (Daily iframe handles the video)
   return (
-    <div className="h-screen bg-gray-950 flex">
-      {/* Main video area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <Video className="w-5 h-5 text-indigo-500 mr-2" />
-              <span className="text-white font-medium">Meeting</span>
-              {isConnected && (
-                <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
-              )}
-            </div>
-            <div className="flex items-center text-gray-400 text-sm">
-              <Users className="w-4 h-4 mr-1" />
-              <span>{participants.length + 1}</span>
-            </div>
+    <div className="h-screen bg-gray-950 relative">
+      {/* Daily iframe will be injected here */}
+      
+      {/* Custom controls overlay (optional - Daily has built-in controls) */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+        <div className="max-w-4xl mx-auto flex items-center justify-between pointer-events-auto">
+          <div className="flex items-center space-x-2 text-white">
+            <Users className="w-5 h-5" />
+            <span>{participants.length + 1} participants</span>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <button
-              onClick={copyMeetingLink}
-              className="flex items-center text-gray-400 hover:text-white text-sm transition-colors"
+              onClick={toggleMute}
+              className={`p-4 rounded-full transition-colors ${
+                isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
             >
-              {copied ? <CheckCircle className="w-4 h-4 mr-1 text-green-500" /> : <Copy className="w-4 h-4 mr-1" />}
-              {copied ? 'Copied!' : 'Invite'}
+              {isMuted ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
             </button>
+            
             <button
-              onClick={() => setShowChat(!showChat)}
-              className={`p-2 rounded-lg transition-colors ${showChat ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              onClick={toggleVideo}
+              className={`p-4 rounded-full transition-colors ${
+                isVideoOff ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
             >
-              <MessageSquare className="w-5 h-5" />
+              {isVideoOff ? <VideoOff className="w-6 h-6 text-white" /> : <Video className="w-6 h-6 text-white" />}
+            </button>
+            
+            <button
+              onClick={toggleScreenShare}
+              className={`p-4 rounded-full transition-colors ${
+                isScreenSharing ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+            >
+              <Monitor className="w-6 h-6 text-white" />
+            </button>
+            
+            <button
+              onClick={leaveMeeting}
+              className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
+            >
+              <PhoneOff className="w-6 h-6 text-white" />
             </button>
           </div>
-        </div>
-
-        {/* Video Grid */}
-        <div className="flex-1 relative">
-          <VideoGrid
-            participants={participants.map(p => ({
-              id: p.socketId,
-              name: p.userName,
-              stream: p.stream || null,
-              isMuted: p.isMuted,
-            }))}
-            localStream={isScreenSharing ? screenStream : localStream}
-            localName={user?.name || 'You'}
-            isLocalMuted={!isAudioEnabled}
-          />
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center justify-center py-6 bg-gray-900/80 backdrop-blur-sm border-t border-gray-800">
-          <VideoControls
-            isAudioEnabled={isAudioEnabled}
-            isVideoEnabled={isVideoEnabled}
-            isScreenSharing={isScreenSharing}
-            onToggleAudio={toggleAudio}
-            onToggleVideo={toggleVideo}
-            onToggleScreenShare={toggleScreenShare}
-            onLeaveCall={leaveCall}
-          />
+          
+          <button
+            onClick={copyMeetingLink}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors"
+          >
+            {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            <span className="text-sm">{copied ? 'Copied!' : 'Invite'}</span>
+          </button>
         </div>
       </div>
-
-      {/* Chat sidebar */}
-      {showChat && (
-        <div className="w-80 bg-gray-900 border-l border-gray-800 flex flex-col">
-          <div className="p-4 border-b border-gray-800">
-            <h3 className="text-white font-medium">Chat</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {chatMessages.map((msg, i) => (
-              <div key={i} className="text-sm">
-                <span className="font-medium text-indigo-400">{msg.userName}:</span>
-                <span className="text-gray-300 ml-2">{msg.message}</span>
-              </div>
-            ))}
-          </div>
-          <div className="p-4 border-t border-gray-800">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type a message..."
-                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
-              />
-              <Button onClick={handleSendMessage} className="px-3">
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
