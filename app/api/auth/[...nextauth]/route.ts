@@ -3,13 +3,28 @@ import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { MongoDBAdapter } from '@auth/mongodb-adapter';
-import clientPromise from '@/lib/mongodb-client';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 
+// Lazy load MongoDB client to avoid build-time errors
+const getClientPromise = async () => {
+  const { default: clientPromise } = await import('@/lib/mongodb-client');
+  return clientPromise;
+};
+
+// Create adapter only if MongoDB URI is available
+const getAdapter = () => {
+  if (!process.env.MONGODB_URI) {
+    return undefined;
+  }
+  // Dynamic import to avoid build-time errors
+  const clientPromise = require('@/lib/mongodb-client').default;
+  return MongoDBAdapter(clientPromise);
+};
+
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
+  adapter: getAdapter(),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -28,6 +43,10 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Please enter email and password');
+        }
+
+        if (!process.env.MONGODB_URI) {
+          throw new Error('Database not configured');
         }
 
         await connectDB();
@@ -96,20 +115,28 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       // For OAuth providers, ensure user is created in our database
       if (account?.provider === 'google' || account?.provider === 'github') {
-        await connectDB();
+        if (!process.env.MONGODB_URI) {
+          return true; // Skip DB operations if not configured
+        }
         
-        const existingUser = await User.findOne({ email: user.email });
-        
-        if (!existingUser) {
-          // Create new user for OAuth
-          await User.create({
-            name: user.name,
-            email: user.email,
-            avatar: user.image,
-            provider: account.provider,
-            providerId: account.providerAccountId,
-            emailVerified: true,
-          });
+        try {
+          await connectDB();
+          
+          const existingUser = await User.findOne({ email: user.email });
+          
+          if (!existingUser) {
+            // Create new user for OAuth
+            await User.create({
+              name: user.name,
+              email: user.email,
+              avatar: user.image,
+              provider: account.provider,
+              providerId: account.providerAccountId,
+              emailVerified: true,
+            });
+          }
+        } catch (error) {
+          console.error('Error creating OAuth user:', error);
         }
       }
       return true;
