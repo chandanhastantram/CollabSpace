@@ -1,33 +1,35 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { FloatingShapes, Sticker, BrutalistCard, BrutalistButton } from '@/components/ui/RetroElements';
 import { DynamicAvatar } from '@/components/widgets/DynamicAvatar';
-import { GlowingEffect } from '@/components/ui/glowing-effect';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { Spinner } from '@/components/ui/loading';
-import { cn } from '@/lib/utils';
 import { 
   FileText, 
   Users, 
   Video, 
-  Settings, 
   Plus,
   FolderOpen,
   MessageSquare,
   Bell,
   Search,
   LogOut,
-  ChevronRight,
-  BarChart2,
-  UserPlus
+  Zap,
+  Settings,
+  UserPlus,
+  BarChart2
 } from 'lucide-react';
-import Link from 'next/link';
 
 export default function Dashboard() {
   const router = useRouter();
   const { user, loading, isAuthenticated, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -37,8 +39,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Spinner size="lg" />
+      <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] flex items-center justify-center">
+        <div className="retro-loader"></div>
       </div>
     );
   }
@@ -51,116 +53,86 @@ export default function Dashboard() {
       label: 'New Document', 
       desc: 'Create a new document',
       href: '/documents/new',
+      color: 'yellow',
     },
     { 
       icon: Users, 
       label: 'New Workspace', 
       desc: 'Create a team workspace',
       href: '/workspaces/new',
+      color: 'white',
     },
     { 
       icon: Video, 
       label: 'Start Meeting', 
       desc: 'Start a video call',
       href: '/meeting',
+      color: 'yellow',
     },
   ];
 
   const features = [
-    { 
-      icon: FileText, 
-      label: 'Documents', 
-      desc: 'Create and edit documents',
-      href: '/documents',
-    },
-    { 
-      icon: Users, 
-      label: 'Workspaces', 
-      desc: 'Manage team workspaces',
-      href: '/workspaces',
-    },
-    { 
-      icon: Video, 
-      label: 'Meetings', 
-      desc: 'Video calls & screen share',
-      href: '/meeting',
-    },
-    { 
-      icon: FolderOpen, 
-      label: 'My Files', 
-      desc: 'Browse all your files',
-      href: '/files',
-    },
-    { 
-      icon: MessageSquare, 
-      label: 'Messages', 
-      desc: 'Chat with your team',
-      href: '/messages',
-    },
-    { 
-      icon: Bell, 
-      label: 'Notifications', 
-      desc: 'View all notifications',
-      href: '/notifications',
-    },
-    { 
-      icon: BarChart2, 
-      label: 'Analytics', 
-      desc: 'View usage statistics',
-      href: '/analytics',
-    },
-    { 
-      icon: UserPlus, 
-      label: 'Connections', 
-      desc: 'Find & connect with people',
-      href: '/connections',
-    },
+    { icon: FileText, label: 'Documents', desc: 'Create and edit', href: '/documents', emoji: '📄' },
+    { icon: Users, label: 'Workspaces', desc: 'Manage teams', href: '/workspaces', emoji: '👥' },
+    { icon: Video, label: 'Meetings', desc: 'Video calls', href: '/meeting', emoji: '🎥' },
+    { icon: FolderOpen, label: 'My Files', desc: 'Browse files', href: '/files', emoji: '📁' },
+    { icon: MessageSquare, label: 'Messages', desc: 'Team chat', href: '/messages', emoji: '💬' },
+    { icon: UserPlus, label: 'Connections', desc: 'Find people', href: '/connections', emoji: '🤝' },
+    { icon: Bell, label: 'Notifications', desc: 'View alerts', href: '/notifications', emoji: '🔔' },
+    { icon: BarChart2, label: 'Analytics', desc: 'View stats', href: '/analytics', emoji: '📊' },
   ];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] grid-pattern relative overflow-hidden">
+      <FloatingShapes />
+
       {/* Header */}
-      <header className="bg-black border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+      <header className="relative z-10 border-b-4 border-black dark:border-white bg-[#FFF8E7] dark:bg-[#0a0a0a]">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-black" />
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="w-12 h-12 bg-[#FFE500] border-3 border-black flex items-center justify-center transform group-hover:rotate-6 transition-transform" style={{ borderWidth: '3px' }}>
+                <Zap className="w-7 h-7 text-black" />
               </div>
-              <span className="text-xl font-bold text-white">
-                CollabSpace
-              </span>
+              <span className="text-2xl font-black text-black dark:text-white">CollabSpace</span>
             </Link>
 
             {/* Search */}
             <div className="hidden md:flex flex-1 max-w-md mx-8">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/40" />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-white/50"
+                  className="brutalist-input w-full pl-12"
                 />
               </div>
             </div>
 
             {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <Link 
-                href="/profile"
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
-              >
+            <div className="flex items-center gap-4">
+              <Link href="/notifications" className="relative">
+                <BrutalistButton variant="ghost" size="sm" className="p-2">
+                  <Bell className="w-5 h-5" />
+                </BrutalistButton>
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#FF6B35] border-2 border-black text-white text-xs font-bold flex items-center justify-center">
+                  3
+                </span>
+              </Link>
+
+              <Link href="/profile" className="flex items-center gap-3 p-2 border-3 border-black bg-white hover:bg-[#FFE500] transition-colors" style={{ borderWidth: '3px' }}>
                 <DynamicAvatar seed={user.email} style="avataaars" size={36} />
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-white">{user.name}</p>
-                  <p className="text-xs text-gray-400">{user.email}</p>
+                  <p className="font-bold text-black text-sm">{user.name}</p>
+                  <p className="text-xs text-black/60">{user.email}</p>
                 </div>
               </Link>
+
               <button
                 onClick={logout}
-                className="p-2 text-gray-400 hover:text-white transition-colors"
+                className="p-3 border-3 border-black bg-white hover:bg-[#FF6B35] hover:text-white transition-colors"
+                style={{ borderWidth: '3px' }}
                 title="Sign out"
               >
                 <LogOut className="w-5 h-5" />
@@ -170,95 +142,85 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Welcome back, {user.name?.split(' ')[0]}! 👋
+        <div className={`mb-10 ${mounted ? 'animate-slide-up' : 'opacity-0'}`}>
+          <div className="flex items-center gap-4 mb-4">
+            <Sticker variant="mint">Dashboard</Sticker>
+            <Sticker variant="yellow">Welcome Back!</Sticker>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-black dark:text-white mb-2">
+            Hey, <span className="inline-block bg-[#FFE500] px-3 transform -rotate-1">{user.name?.split(' ')[0]}</span>! 👋
           </h1>
-          <p className="text-gray-400">
+          <p className="text-lg text-black/60 dark:text-white/60">
             What would you like to do today?
           </p>
         </div>
 
-        {/* Quick Actions with Glowing Effect */}
-        <div className="grid md:grid-cols-3 gap-6 mb-10">
-          {quickActions.map((action) => (
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          {quickActions.map((action, index) => (
             <Link
               key={action.label}
               href={action.href}
-              className="group relative block"
+              className={`group ${mounted ? 'animate-slide-up' : 'opacity-0'}`}
+              style={{ animationDelay: `${200 + index * 100}ms` } as React.CSSProperties}
             >
-              <div className="relative h-full rounded-xl border border-white/20 p-1">
-                <GlowingEffect
-                  spread={40}
-                  glow={true}
-                  disabled={false}
-                  proximity={64}
-                  inactiveZone={0.01}
-                  borderWidth={3}
-                  variant="default"
-                />
-                <div className="relative flex items-center p-4 bg-black rounded-lg hover:bg-white/5 transition-all">
-                  <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mr-4 backdrop-blur-sm">
-                    <action.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-white">{action.label}</p>
-                    <p className="text-sm text-gray-400">{action.desc}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
+              <BrutalistCard 
+                variant={action.color as 'white' | 'yellow'} 
+                className="p-6 h-full flex items-center gap-4"
+              >
+                <div className="w-16 h-16 bg-black flex items-center justify-center group-hover:rotate-6 transition-transform">
+                  <action.icon className="w-8 h-8 text-[#FFE500]" />
                 </div>
-              </div>
+                <div className="flex-1">
+                  <p className="font-black text-xl text-black">{action.label}</p>
+                  <p className="text-black/60">{action.desc}</p>
+                </div>
+              </BrutalistCard>
             </Link>
           ))}
         </div>
 
-        {/* All Features with Glowing Effect */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-white mb-4">
-            All Features
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {features.map((feature) => (
+        {/* All Features */}
+        <div className={`mb-12 ${mounted ? 'animate-slide-up delay-500' : 'opacity-0'}`}>
+          <div className="flex items-center gap-4 mb-6">
+            <Sticker variant="orange">All Features</Sticker>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {features.map((feature, index) => (
               <Link
                 key={feature.label}
                 href={feature.href}
-                className="group relative block min-h-[10rem]"
+                className={`group ${mounted ? 'animate-slide-up' : 'opacity-0'}`}
+                style={{ animationDelay: `${600 + index * 50}ms` } as React.CSSProperties}
               >
-                <div className="relative h-full rounded-xl border border-white/20 p-1">
-                  <GlowingEffect
-                    spread={40}
-                    glow={true}
-                    disabled={false}
-                    proximity={64}
-                    inactiveZone={0.01}
-                    borderWidth={3}
-                    variant="default"
-                  />
-                  <div className="relative h-full p-4 bg-black rounded-lg hover:bg-white/5 transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                        <feature.icon className="w-5 h-5 text-white" />
-                      </div>
+                <BrutalistCard 
+                  variant={index % 2 === 0 ? 'white' : 'yellow'} 
+                  tilt={index % 3 === 0}
+                  className="p-5 h-full"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-black flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <span className="text-2xl">{feature.emoji}</span>
                     </div>
-                    <p className="font-medium text-white mb-1">{feature.label}</p>
-                    <p className="text-sm text-gray-400">{feature.desc}</p>
                   </div>
-                </div>
+                  <p className="font-black text-lg text-black">{feature.label}</p>
+                  <p className="text-sm text-black/60">{feature.desc}</p>
+                </BrutalistCard>
               </Link>
             ))}
           </div>
         </div>
 
         {/* Settings Link */}
-        <div className="flex justify-center">
-          <Link
-            href="/profile"
-            className="inline-flex items-center text-gray-400 hover:text-white transition-colors"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Manage your account settings
+        <div className={`flex justify-center ${mounted ? 'animate-slide-up delay-700' : 'opacity-0'}`}>
+          <Link href="/profile">
+            <BrutalistButton variant="ghost" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Manage your account settings
+            </BrutalistButton>
           </Link>
         </div>
       </main>

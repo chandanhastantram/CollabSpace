@@ -6,52 +6,68 @@
 @import 'quill/dist/quill.snow.css';
 @import 'quill/dist/quill.bubble.css';
 
+/* =========================================
+   RETRO BRUTALIST DESIGN SYSTEM
+   Inspired by import-paradox.vercel.app
+   ========================================= */
+
 @layer base {
   :root {
-    /* Light theme - white background, dark text */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    /* Retro Brutalist Color Palette */
+    --cream: #FFF8E7;
+    --cream-dark: #F5EBD6;
+    --yellow: #FFE500;
+    --yellow-light: #FFF066;
+    --orange: #FF6B35;
+    --red: #FF3B30;
+    --black: #1A1A1A;
+    --white: #FFFFFF;
+    --mint: #00D9A5;
+    --sky: #00BFFF;
+    
+    /* Theme Variables */
+    --background: 43 100% 96%;
+    --foreground: 0 0% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 50 100% 50%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 20 100% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 43 50% 90%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 50 100% 50%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 199 89% 48%;
-    --radius: 0.5rem;
+    --border: 0 0% 10%;
+    --input: 0 0% 100%;
+    --ring: 50 100% 50%;
+    --radius: 0px;
   }
 
   .dark {
-    /* Dark theme - black background, white text */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 5%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 5%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 50 100% 50%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 20 100% 60%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --accent: 50 100% 50%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 199 89% 48%;
+    --border: 0 0% 90%;
+    --input: 0 0% 15%;
+    --ring: 50 100% 50%;
   }
 }
 
@@ -60,62 +76,433 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground transition-colors duration-300;
+    @apply transition-colors duration-300;
+    background-color: var(--cream);
+    font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  }
+  .dark body {
+    background-color: var(--black);
   }
 }
 
-/* Custom Scrollbar - Light */
+/* =========================================
+   RETRO BRUTALIST ANIMATIONS
+   ========================================= */
+
+/* Floating Animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(2deg); }
+  50% { transform: translateY(-5px) rotate(-1deg); }
+  75% { transform: translateY(-15px) rotate(1deg); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-20px) rotate(3deg); }
+}
+
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0) rotate(5deg); }
+  50% { transform: translateY(15px) rotate(-5deg); }
+}
+
+/* Wiggle Animation */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* Bounce Animation */
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Pop Animation */
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Marquee Scroll */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Tilt on Hover */
+@keyframes tilt-shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-2deg); }
+  75% { transform: rotate(2deg); }
+}
+
+/* Pulse Glow */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 229, 0, 0.4); }
+  50% { box-shadow: 0 0 20px 10px rgba(255, 229, 0, 0.2); }
+}
+
+/* Slide In */
+@keyframes slide-up {
+  0% { transform: translateY(50px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-in-left {
+  0% { transform: translateX(-100px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  0% { transform: translateX(100px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Spin Slow */
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Blink Cursor */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* =========================================
+   ANIMATION UTILITY CLASSES
+   ========================================= */
+
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
+.animate-float-reverse { animation: float-reverse 7s ease-in-out infinite; }
+.animate-wiggle { animation: wiggle 0.5s ease-in-out infinite; }
+.animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
+.animate-pop { animation: pop 0.3s ease-in-out; }
+.animate-marquee { animation: marquee 20s linear infinite; }
+.animate-tilt { animation: tilt-shake 0.3s ease-in-out; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
+.animate-slide-left { animation: slide-in-left 0.6s ease-out forwards; }
+.animate-slide-right { animation: slide-in-right 0.6s ease-out forwards; }
+.animate-spin-slow { animation: spin-slow 10s linear infinite; }
+.animate-blink { animation: blink 1s step-end infinite; }
+
+/* Staggered delay utilities */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-1000 { animation-delay: 1000ms; }
+
+/* =========================================
+   BRUTALIST COMPONENT STYLES
+   ========================================= */
+
+/* Brutalist Card with thick border */
+.brutalist-card {
+  background: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  transition: all 0.2s ease;
+}
+
+.brutalist-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--black);
+}
+
+.dark .brutalist-card {
+  background: #1a1a1a;
+  border-color: var(--white);
+  box-shadow: 6px 6px 0 var(--white);
+}
+
+.dark .brutalist-card:hover {
+  box-shadow: 9px 9px 0 var(--white);
+}
+
+/* Yellow Accent Card */
+.brutalist-card-yellow {
+  background: var(--yellow);
+  border: 3px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  transition: all 0.2s ease;
+}
+
+.brutalist-card-yellow:hover {
+  transform: translate(-3px, -3px) rotate(-1deg);
+  box-shadow: 9px 9px 0 var(--black);
+}
+
+/* Orange CTA Button */
+.brutalist-btn {
+  background: var(--orange);
+  color: var(--white);
+  border: 3px solid var(--black);
+  padding: 12px 24px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 4px 4px 0 var(--black);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.brutalist-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--black);
+}
+
+.brutalist-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--black);
+}
+
+/* Yellow Button Variant */
+.brutalist-btn-yellow {
+  background: var(--yellow);
+  color: var(--black);
+}
+
+/* Ghost Button */
+.brutalist-btn-ghost {
+  background: transparent;
+  border: 3px solid var(--black);
+  color: var(--black);
+  box-shadow: none;
+}
+
+.brutalist-btn-ghost:hover {
+  background: var(--yellow);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+/* Sticker Label */
+.sticker {
+  display: inline-block;
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  padding: 4px 12px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+  box-shadow: 2px 2px 0 var(--black);
+}
+
+.sticker-orange {
+  background: var(--orange);
+  color: var(--white);
+}
+
+.sticker-mint {
+  background: var(--mint);
+  color: var(--black);
+}
+
+/* Marquee Container */
+.marquee-container {
+  overflow: hidden;
+  background: var(--orange);
+  border-top: 3px solid var(--black);
+  border-bottom: 3px solid var(--black);
+  padding: 8px 0;
+}
+
+.marquee-content {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee 20s linear infinite;
+}
+
+.marquee-content span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--white);
+}
+
+/* Floating Shapes */
+.floating-shape {
+  position: absolute;
+  border: 3px solid var(--black);
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.floating-shape-yellow {
+  background: var(--yellow);
+  opacity: 0.8;
+}
+
+.floating-shape-orange {
+  background: var(--orange);
+  opacity: 0.6;
+}
+
+.floating-shape-mint {
+  background: var(--mint);
+  opacity: 0.6;
+}
+
+/* Grid Pattern Background */
+.grid-pattern {
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+}
+
+/* Speech Bubble Pointer */
+.speech-bubble {
+  position: relative;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid var(--black);
+}
+
+/* Tilted Elements */
+.tilt-left { transform: rotate(-3deg); }
+.tilt-right { transform: rotate(3deg); }
+.tilt-left-sm { transform: rotate(-1.5deg); }
+.tilt-right-sm { transform: rotate(1.5deg); }
+
+/* Retro Input */
+.brutalist-input {
+  background: var(--white);
+  border: 3px solid var(--black);
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.brutalist-input:focus {
+  box-shadow: 4px 4px 0 var(--yellow);
+}
+
+.dark .brutalist-input {
+  background: #1a1a1a;
+  border-color: var(--white);
+  color: var(--white);
+}
+
+.dark .brutalist-input:focus {
+  box-shadow: 4px 4px 0 var(--yellow);
+}
+
+/* =========================================
+   CUSTOM SCROLLBAR
+   ========================================= */
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-muted;
+  background: var(--cream);
+  border-left: 3px solid var(--black);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/30 rounded;
+  background: var(--yellow);
+  border: 2px solid var(--black);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/50;
+  background: var(--orange);
 }
 
-/* Quill Editor - uses theme-aware styles */
+.dark ::-webkit-scrollbar-track {
+  background: var(--black);
+  border-left: 3px solid var(--white);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  border-color: var(--white);
+}
+
+/* =========================================
+   QUILL EDITOR OVERRIDES
+   ========================================= */
+
 .ql-toolbar {
-  @apply bg-muted border-border !important;
+  background: var(--cream) !important;
+  border: 3px solid var(--black) !important;
+  border-bottom: none !important;
 }
 
 .ql-container {
-  @apply bg-background border-border !important;
+  background: var(--white) !important;
+  border: 3px solid var(--black) !important;
 }
 
 .ql-editor {
-  @apply text-foreground !important;
+  color: var(--black) !important;
+  font-family: inherit !important;
+}
+
+.dark .ql-toolbar {
+  background: #1a1a1a !important;
+  border-color: var(--white) !important;
+}
+
+.dark .ql-container {
+  background: #0a0a0a !important;
+  border-color: var(--white) !important;
+}
+
+.dark .ql-editor {
+  color: var(--white) !important;
 }
 
 .ql-stroke {
-  @apply !stroke-foreground;
+  stroke: var(--black) !important;
 }
 
 .ql-fill {
-  @apply !fill-foreground;
+  fill: var(--black) !important;
 }
 
-.ql-picker-label {
-  @apply !text-foreground;
+.dark .ql-stroke {
+  stroke: var(--white) !important;
 }
 
-.ql-picker-options {
-  @apply !bg-popover !border-border;
+.dark .ql-fill {
+  fill: var(--white) !important;
 }
 
-.ql-picker-item {
-  @apply !text-foreground;
-}
+/* =========================================
+   LOADING SPINNER
+   ========================================= */
 
-/* Loading Spinner */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -124,4 +511,18 @@
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* Retro Loading */
+.retro-loader {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--black);
+  border-top-color: var(--yellow);
+  animation: spin 0.8s linear infinite;
+}
+
+.dark .retro-loader {
+  border-color: var(--white);
+  border-top-color: var(--yellow);
 }
