@@ -2,20 +2,19 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useRealtimeChat } from '@/hooks/useRealtimeChat';
-import { Button } from '@/components/ui/Button';
-import { Spinner } from '@/components/ui/loading';
-import { GlowingEffect } from '@/components/ui/glowing-effect';
+import { FloatingShapes, Sticker, BrutalistCard, BrutalistButton } from '@/components/ui/RetroElements';
 import { 
   MessageSquare, 
   Send, 
   Users, 
   Hash,
   Circle,
-  ArrowLeft
+  ArrowLeft,
+  Zap
 } from 'lucide-react';
-import Link from 'next/link';
 
 export default function MessagesPage() {
   const router = useRouter();
@@ -25,6 +24,11 @@ export default function MessagesPage() {
   const workspaceId = searchParams.get('workspace') || 'demo-workspace';
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const {
     messages,
@@ -40,19 +44,16 @@ export default function MessagesPage() {
     userId: user?.id || '',
   });
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [authLoading, isAuthenticated, router]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle send message
   const handleSend = async () => {
     if (!messageInput.trim()) return;
     
@@ -62,7 +63,6 @@ export default function MessagesPage() {
     }
   };
 
-  // Handle key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -72,140 +72,131 @@ export default function MessagesPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Spinner size="lg" />
+      <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] flex items-center justify-center">
+        <div className="retro-loader"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black flex">
-      {/* Sidebar - Online Members */}
-      <div className="w-64 border-r border-white/10 p-4 hidden md:block">
-        <div className="mb-6">
-          <Link 
-            href="/dashboard" 
-            className="flex items-center text-gray-400 hover:text-white transition"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Link>
+    <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] grid-pattern relative overflow-hidden flex">
+      <FloatingShapes />
+
+      {/* Sidebar */}
+      <div className="relative z-10 w-72 border-r-4 border-black dark:border-white bg-white dark:bg-[#1a1a1a] p-4 hidden md:flex flex-col">
+        {/* Back Button */}
+        <Link 
+          href="/dashboard" 
+          className="flex items-center gap-2 mb-6 text-black dark:text-white hover:text-[#FF6B35] transition font-bold"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Dashboard
+        </Link>
+
+        {/* Logo */}
+        <div className="flex items-center gap-2 mb-8">
+          <div className="w-10 h-10 bg-[#FFE500] border-3 border-black flex items-center justify-center" style={{ borderWidth: '3px' }}>
+            <Zap className="w-5 h-5 text-black" />
+          </div>
+          <span className="font-black text-black dark:text-white">Messages</span>
         </div>
 
-        <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center">
-          <Hash className="w-4 h-4 mr-2" />
-          Channels
-        </h3>
-        <div className="space-y-1 mb-6">
-          <div className="px-3 py-2 bg-white/10 rounded-lg text-white">
-            # general
+        {/* Channels */}
+        <div className="mb-8">
+          <Sticker variant="yellow" className="mb-4">Channels</Sticker>
+          <BrutalistCard variant="yellow" className="p-3 flex items-center gap-2">
+            <Hash className="w-4 h-4 text-black" />
+            <span className="font-bold text-black">general</span>
+          </BrutalistCard>
+        </div>
+
+        {/* Online Members */}
+        <div className="flex-1">
+          <Sticker variant="mint" className="mb-4">Online — {onlineMembers.length}</Sticker>
+          <div className="space-y-2">
+            {onlineMembers.map((member) => (
+              <div key={member.id} className="flex items-center gap-3 p-2 border-2 border-black bg-white dark:bg-[#1a1a1a]">
+                <div className="relative">
+                  <div className="w-8 h-8 bg-[#FFE500] border-2 border-black flex items-center justify-center font-bold text-black">
+                    {member.info.name?.charAt(0) || '?'}
+                  </div>
+                  <Circle className="w-3 h-3 text-[#00D9A5] fill-[#00D9A5] absolute -bottom-0.5 -right-0.5" />
+                </div>
+                <span className="text-black dark:text-white text-sm font-medium truncate">{member.info.name}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <h3 className="text-sm font-medium text-gray-400 mb-3 flex items-center">
-          <Users className="w-4 h-4 mr-2" />
-          Online — {onlineMembers.length}
-        </h3>
-        <div className="space-y-2">
-          {onlineMembers.map((member) => (
-            <div key={member.id} className="flex items-center space-x-2 px-2 py-1">
-              <div className="relative">
-                {member.info.avatar ? (
-                  <img 
-                    src={member.info.avatar} 
-                    alt={member.info.name}
-                    className="w-8 h-8 rounded-full"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">
-                    {member.info.name?.charAt(0) || '?'}
-                  </div>
-                )}
-                <Circle className="w-3 h-3 text-green-500 fill-green-500 absolute -bottom-0.5 -right-0.5" />
-              </div>
-              <span className="text-gray-300 text-sm truncate">{member.info.name}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Connection status */}
-        <div className="mt-6 text-xs text-gray-500 flex items-center">
-          <Circle className={`w-2 h-2 mr-2 ${isConnected ? 'text-green-500 fill-green-500' : 'text-red-500 fill-red-500'}`} />
-          {isConnected ? 'Connected' : 'Connecting...'}
+        {/* Connection Status */}
+        <div className="mt-4 p-3 border-2 border-black bg-white dark:bg-[#1a1a1a]">
+          <div className="flex items-center gap-2 text-sm">
+            <Circle className={`w-3 h-3 ${isConnected ? 'text-[#00D9A5] fill-[#00D9A5]' : 'text-[#FF6B35] fill-[#FF6B35]'}`} />
+            <span className="font-bold text-black dark:text-white">{isConnected ? 'Connected' : 'Connecting...'}</span>
+          </div>
         </div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="relative z-10 flex-1 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center">
-            <MessageSquare className="w-5 h-5 text-indigo-400 mr-2" />
-            <h1 className="text-lg font-semibold text-white"># general</h1>
+        <div className="p-4 border-b-4 border-black dark:border-white bg-white dark:bg-[#1a1a1a] flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#FFE500] border-3 border-black flex items-center justify-center" style={{ borderWidth: '3px' }}>
+              <MessageSquare className="w-5 h-5 text-black" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-black dark:text-white"># general</h1>
+              <p className="text-sm text-black/60 dark:text-white/60">Team communication</p>
+            </div>
           </div>
-          <div className="text-sm text-gray-400">
-            {onlineMembers.length} online
-          </div>
+          <Sticker variant="orange">{onlineMembers.length} online</Sticker>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#FFF8E7] dark:bg-[#0a0a0a]">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
-              <p>No messages yet. Start the conversation!</p>
+            <div className="flex flex-col items-center justify-center h-full">
+              <BrutalistCard variant="white" className="p-8 text-center">
+                <MessageSquare className="w-16 h-16 text-black/30 mx-auto mb-4" />
+                <p className="font-bold text-black text-lg">No messages yet</p>
+                <p className="text-black/60">Start the conversation!</p>
+              </BrutalistCard>
             </div>
           ) : (
             messages.map((message) => (
               <div 
                 key={message.id}
-                className={`flex items-start space-x-3 ${
-                  message.senderId === user?.id ? 'flex-row-reverse space-x-reverse' : ''
+                className={`flex items-start gap-3 ${
+                  message.senderId === user?.id ? 'flex-row-reverse' : ''
                 }`}
               >
                 {/* Avatar */}
-                <div className="shrink-0">
-                  {message.senderAvatar ? (
-                    <img 
-                      src={message.senderAvatar} 
-                      alt={message.senderName}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                      {message.senderName?.charAt(0) || '?'}
-                    </div>
-                  )}
+                <div className="shrink-0 w-10 h-10 bg-[#FFE500] border-3 border-black flex items-center justify-center font-bold text-black" style={{ borderWidth: '3px' }}>
+                  {message.senderName?.charAt(0) || '?'}
                 </div>
 
                 {/* Message */}
-                <div className={`max-w-[70%] ${message.senderId === user?.id ? 'text-right' : ''}`}>
-                  <div className="flex items-baseline space-x-2 mb-1">
-                    <span className="text-sm font-medium text-white">
+                <BrutalistCard 
+                  variant={message.senderId === user?.id ? 'yellow' : 'white'}
+                  hover={false}
+                  className={`max-w-[70%] p-3 ${message.senderId === user?.id ? 'transform -rotate-1' : 'transform rotate-1'}`}
+                >
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-bold text-black text-sm">
                       {message.senderName}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-black/50">
                       {new Date(message.createdAt).toLocaleTimeString([], { 
                         hour: '2-digit', 
                         minute: '2-digit' 
                       })}
                     </span>
                   </div>
-                  <div className={`relative rounded-2xl p-3 ${
-                    message.senderId === user?.id 
-                      ? 'bg-indigo-600 text-white rounded-tr-sm' 
-                      : 'bg-white/10 text-gray-100 rounded-tl-sm'
-                  }`}>
-                    <GlowingEffect 
-                      spread={30} 
-                      glow={message.senderId === user?.id}
-                      disabled={message.senderId !== user?.id}
-                    />
-                    <p className="relative z-10 text-sm whitespace-pre-wrap break-words">
-                      {message.content}
-                    </p>
-                  </div>
-                </div>
+                  <p className="text-black text-sm whitespace-pre-wrap break-words">
+                    {message.content}
+                  </p>
+                </BrutalistCard>
               </div>
             ))
           )}
@@ -214,14 +205,16 @@ export default function MessagesPage() {
 
         {/* Typing Indicator */}
         {typingUsers.length > 0 && (
-          <div className="px-4 py-2 text-sm text-gray-400">
-            {typingUsers.map(u => u.userName).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+          <div className="px-6 py-2 text-sm text-black/60 dark:text-white/60 font-medium">
+            <Sticker variant="mint" className="text-xs">
+              {typingUsers.map(u => u.userName).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+            </Sticker>
           </div>
         )}
 
         {/* Message Input */}
-        <div className="p-4 border-t border-white/10">
-          <div className="flex items-center space-x-3">
+        <div className="p-4 border-t-4 border-black dark:border-white bg-white dark:bg-[#1a1a1a]">
+          <div className="flex items-center gap-3">
             <input
               type="text"
               value={messageInput}
@@ -231,15 +224,16 @@ export default function MessagesPage() {
               }}
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
-              className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="brutalist-input flex-1"
             />
-            <Button 
+            <BrutalistButton 
               onClick={handleSend}
               disabled={!messageInput.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 px-4 py-3 rounded-xl"
+              variant="orange"
+              className="p-3"
             >
               <Send className="w-5 h-5" />
-            </Button>
+            </BrutalistButton>
           </div>
         </div>
       </div>

@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { Button } from '@/components/ui/Button';
-import { Spinner } from '@/components/ui/loading';
+import { FloatingShapes, Sticker, BrutalistCard, BrutalistButton } from '@/components/ui/RetroElements';
 import DailyIframe from '@daily-co/daily-js';
 import { 
   Video, 
@@ -16,7 +16,9 @@ import {
   Copy,
   CheckCircle,
   Users,
-  MessageSquare
+  ArrowLeft,
+  Zap,
+  Play
 } from 'lucide-react';
 
 export default function MeetingPage() {
@@ -31,18 +33,20 @@ export default function MeetingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
-  // Call state
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
   
-  // Join mode: 'start' or 'join'
   const [mode, setMode] = useState<'start' | 'join'>(searchParams.get('id') ? 'join' : 'start');
   const [joinCode, setJoinCode] = useState(searchParams.get('id') || '');
 
-  // Get room ID from URL or generate new
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     const urlRoomId = searchParams.get('id');
     if (urlRoomId) {
@@ -55,7 +59,6 @@ export default function MeetingPage() {
     }
   }, [searchParams]);
 
-  // Create or join room
   const joinMeeting = async () => {
     const meetingId = mode === 'join' && joinCode ? joinCode.trim() : roomName;
     if (!meetingId) {
@@ -67,7 +70,6 @@ export default function MeetingPage() {
     setError('');
 
     try {
-      // Create room if it doesn't exist
       const createResponse = await fetch('/api/meetings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,100 +81,85 @@ export default function MeetingPage() {
         const data = await createResponse.json();
         room = data.room;
       } else {
-        // Room might already exist, try to get it
         const getResponse = await fetch(`/api/meetings?name=${meetingId}`);
-        if (getResponse.ok) {
-          const data = await getResponse.json();
-          room = data.room;
-        } else {
-          throw new Error('Failed to create or join room');
-        }
+        if (!getResponse.ok) throw new Error('Room not found');
+        const data = await getResponse.json();
+        room = data.room;
       }
 
-      setRoomUrl(room.url);
-
-      // Get meeting token
       const tokenResponse = await fetch('/api/meetings/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomName: meetingId,
+          roomName: room.name,
           userName: user?.name || 'Guest',
-          isOwner: mode === 'start', // Owner if starting new room
         }),
       });
 
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to get meeting token');
-      }
-
+      if (!tokenResponse.ok) throw new Error('Failed to get token');
       const { token } = await tokenResponse.json();
 
-      // Create Daily call frame
-      const callFrame = DailyIframe.createFrame({
-        iframeStyle: {
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          width: '100%',
-          height: '100%',
-          border: '0',
-        },
-        showLeaveButton: false,
-        showFullscreenButton: true,
-      });
+      setRoomUrl(room.url);
+      setRoomName(room.name);
 
-      callFrameRef.current = callFrame;
+      if (!callFrameRef.current) {
+        const callFrame = DailyIframe.createFrame(
+          document.getElementById('video-container')!,
+          {
+            showLeaveButton: false,
+            iframeStyle: {
+              width: '100%',
+              height: '100%',
+              border: '4px solid #000',
+            },
+          }
+        );
 
-      // Set up event listeners
-      callFrame
-        .on('joined-meeting', handleJoinedMeeting)
-        .on('left-meeting', handleLeftMeeting)
-        .on('participant-joined', handleParticipantJoined)
-        .on('participant-left', handleParticipantLeft)
-        .on('error', handleError);
+        callFrame.on('joined-meeting', () => {
+          setIsJoined(true);
+          setIsLoading(false);
+        });
 
-      // Join the call
-      await callFrame.join({ url: room.url, token });
-      setIsJoined(true);
+        callFrame.on('left-meeting', () => {
+          setIsJoined(false);
+          router.push('/dashboard');
+        });
+
+        callFrame.on('participant-joined', (event: any) => {
+          setParticipants(prev => [...prev, event.participant]);
+        });
+
+        callFrame.on('participant-left', (event: any) => {
+          setParticipants(prev => prev.filter(p => p.session_id !== event.participant.session_id));
+        });
+
+        callFrame.on('error', (error: any) => {
+          console.error('Call error:', error);
+          setError('Video call error');
+          setIsLoading(false);
+        });
+
+        callFrameRef.current = callFrame;
+      }
+
+      await callFrameRef.current.join({ url: room.url, token });
+
     } catch (err: any) {
-      console.error('Join meeting error:', err);
       setError(err.message || 'Failed to join meeting');
-    } finally {
       setIsLoading(false);
     }
   };
 
-  // Event handlers
-  const handleJoinedMeeting = useCallback(() => {
-    console.log('Joined meeting');
-    setIsJoined(true);
-  }, []);
-
-  const handleLeftMeeting = useCallback(() => {
-    console.log('Left meeting');
+  const leaveMeeting = useCallback(async () => {
+    if (callFrameRef.current) {
+      await callFrameRef.current.leave();
+      callFrameRef.current.destroy();
+      callFrameRef.current = null;
+    }
     setIsJoined(false);
     router.push('/dashboard');
   }, [router]);
 
-  const handleParticipantJoined = useCallback((event: any) => {
-    console.log('Participant joined:', event.participant);
-    setParticipants(prev => [...prev, event.participant]);
-  }, []);
-
-  const handleParticipantLeft = useCallback((event: any) => {
-    console.log('Participant left:', event.participant);
-    setParticipants(prev => 
-      prev.filter(p => p.session_id !== event.participant.session_id)
-    );
-  }, []);
-
-  const handleError = useCallback((error: any) => {
-    console.error('Daily error:', error);
-    setError(error.errorMsg || 'An error occurred');
-  }, []);
-
-  // Call controls
   const toggleMute = () => {
     if (callFrameRef.current) {
       callFrameRef.current.setLocalAudio(!isMuted);
@@ -191,22 +178,11 @@ export default function MeetingPage() {
     if (callFrameRef.current) {
       if (isScreenSharing) {
         await callFrameRef.current.stopScreenShare();
-        setIsScreenSharing(false);
       } else {
         await callFrameRef.current.startScreenShare();
-        setIsScreenSharing(true);
       }
+      setIsScreenSharing(!isScreenSharing);
     }
-  };
-
-  const leaveMeeting = () => {
-    if (callFrameRef.current) {
-      callFrameRef.current.leave();
-      callFrameRef.current.destroy();
-      callFrameRef.current = null;
-    }
-    setIsJoined(false);
-    router.push('/dashboard');
   };
 
   const copyMeetingLink = () => {
@@ -216,202 +192,185 @@ export default function MeetingPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (callFrameRef.current) {
-        callFrameRef.current.destroy();
-      }
-    };
-  }, []);
-
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <Spinner size="lg" />
+      <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] flex items-center justify-center">
+        <div className="retro-loader"></div>
       </div>
     );
   }
 
-  // Pre-call lobby
-  if (!isJoined) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center p-6 transition-colors duration-300">
-        <div className="max-w-md w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-800 p-8 transition-colors duration-300">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Video className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Video Call</h1>
-          </div>
-
-          {/* Mode Toggle Tabs */}
-          <div className="flex mb-6 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={() => setMode('start')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'start'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Start New
-            </button>
-            <button
-              onClick={() => setMode('join')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'join'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              Join Existing
-            </button>
-          </div>
-
-          {error && (
-            <div className="p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-lg mb-6">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Start New Meeting - Show generated Meeting ID */}
-          {mode === 'start' && (
-            <div className="mb-6">
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Your Meeting ID</label>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={roomName}
-                  readOnly
-                  className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm font-mono"
-                />
-                <Button onClick={copyMeetingLink} variant="outline" className="shrink-0">
-                  {copied ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">Share this link with others to join</p>
-            </div>
-          )}
-
-          {/* Join Existing Meeting - Enter Meeting Code */}
-          {mode === 'join' && (
-            <div className="mb-6">
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Enter Meeting Code</label>
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="e.g. meet-abc123xyz"
-                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm font-mono placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
-              <p className="text-xs text-gray-500 mt-2">Enter the meeting code shared with you</p>
-            </div>
-          )}
-
-          {/* User info */}
-          {user && (
-            <div className="flex items-center p-4 bg-gray-100 dark:bg-gray-800/50 rounded-lg mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
-                {user.name?.charAt(0) || 'U'}
-              </div>
-              <div className="ml-3">
-                <p className="text-gray-900 dark:text-white font-medium">{user.name || 'User'}</p>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">{user.email}</p>
-              </div>
-            </div>
-          )}
-
-          <Button
-            onClick={joinMeeting}
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white py-3"
-          >
-            {isLoading ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                Joining...
-              </>
-            ) : (
-              <>
-                <Video className="w-5 h-5 mr-2" />
-                {mode === 'join' ? 'Join Call' : 'Start Call'}
-              </>
-            )}
-          </Button>
-
-          <div className="mt-6 text-center">
-            <Button
-              onClick={() => router.push('/dashboard')}
-              variant="ghost"
-              className="text-gray-400 hover:text-white"
-            >
-              ← Back to Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // In-call view (Daily iframe handles the video)
   return (
-    <div className="h-screen bg-gray-950 relative">
-      {/* Daily iframe will be injected here */}
-      
-      {/* Custom controls overlay (optional - Daily has built-in controls) */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
-        <div className="max-w-4xl mx-auto flex items-center justify-between pointer-events-auto">
-          <div className="flex items-center space-x-2 text-white">
-            <Users className="w-5 h-5" />
-            <span>{participants.length + 1} participants</span>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={toggleMute}
-              className={`p-4 rounded-full transition-colors ${
-                isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-            >
-              {isMuted ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
-            </button>
-            
-            <button
-              onClick={toggleVideo}
-              className={`p-4 rounded-full transition-colors ${
-                isVideoOff ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-            >
-              {isVideoOff ? <VideoOff className="w-6 h-6 text-white" /> : <Video className="w-6 h-6 text-white" />}
-            </button>
-            
-            <button
-              onClick={toggleScreenShare}
-              className={`p-4 rounded-full transition-colors ${
-                isScreenSharing ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-700 hover:bg-gray-600'
-              }`}
-            >
-              <Monitor className="w-6 h-6 text-white" />
-            </button>
-            
-            <button
-              onClick={leaveMeeting}
-              className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
-            >
-              <PhoneOff className="w-6 h-6 text-white" />
-            </button>
-          </div>
-          
-          <button
-            onClick={copyMeetingLink}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors"
-          >
-            {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-            <span className="text-sm">{copied ? 'Copied!' : 'Invite'}</span>
-          </button>
+    <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] grid-pattern relative overflow-hidden">
+      <FloatingShapes />
+
+      {/* Header */}
+      <header className="relative z-10 border-b-4 border-black dark:border-white bg-white dark:bg-[#1a1a1a]">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-[#FFE500] border-3 border-black flex items-center justify-center" style={{ borderWidth: '3px' }}>
+              <Zap className="w-5 h-5 text-black" />
+            </div>
+            <span className="font-black text-xl text-black dark:text-white">CollabSpace</span>
+          </Link>
+
+          {isJoined && (
+            <Sticker variant="mint">
+              <Users className="w-4 h-4 inline mr-1" />
+              {participants.length + 1} in call
+            </Sticker>
+          )}
         </div>
-      </div>
+      </header>
+
+      <main className="relative z-10 max-w-6xl mx-auto px-6 py-8">
+        {!isJoined ? (
+          /* Pre-Join Screen */
+          <div className={`max-w-lg mx-auto ${mounted ? 'animate-slide-up' : 'opacity-0'}`}>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 mb-8 text-black dark:text-white hover:text-[#FF6B35] transition font-bold"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Dashboard
+            </Link>
+
+            <BrutalistCard variant="white" className="p-8">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-[#FFE500] border-3 border-black mx-auto mb-4 flex items-center justify-center" style={{ borderWidth: '3px' }}>
+                  <Video className="w-10 h-10 text-black" />
+                </div>
+                <h1 className="text-3xl font-black text-black mb-2">Video Meeting</h1>
+                <p className="text-black/60">Start or join a video call</p>
+              </div>
+
+              {/* Mode Toggle */}
+              <div className="flex border-3 border-black mb-6" style={{ borderWidth: '3px' }}>
+                <button
+                  onClick={() => setMode('start')}
+                  className={`flex-1 py-3 font-bold uppercase tracking-wide text-sm transition ${
+                    mode === 'start' 
+                      ? 'bg-[#FFE500] text-black' 
+                      : 'bg-white text-black/60 hover:bg-gray-100'
+                  }`}
+                >
+                  Start New
+                </button>
+                <button
+                  onClick={() => setMode('join')}
+                  className={`flex-1 py-3 font-bold uppercase tracking-wide text-sm transition border-l-3 border-black ${
+                    mode === 'join' 
+                      ? 'bg-[#FFE500] text-black' 
+                      : 'bg-white text-black/60 hover:bg-gray-100'
+                  }`}
+                  style={{ borderLeftWidth: '3px' }}
+                >
+                  Join Existing
+                </button>
+              </div>
+
+              {mode === 'join' && (
+                <div className="mb-6">
+                  <label className="block font-bold uppercase text-sm mb-2 text-black">Meeting Code</label>
+                  <input
+                    type="text"
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value)}
+                    placeholder="Enter meeting code..."
+                    className="brutalist-input w-full"
+                  />
+                </div>
+              )}
+
+              {error && (
+                <div className="p-3 mb-4 bg-[#FF6B35] text-white border-3 border-black font-bold" style={{ borderWidth: '3px' }}>
+                  ⚠️ {error}
+                </div>
+              )}
+
+              {/* User Info */}
+              <BrutalistCard variant="yellow" className="p-4 mb-6">
+                <p className="text-sm text-black/60 mb-1">Joining as:</p>
+                <p className="font-black text-black">{user?.name || 'Guest'}</p>
+                <p className="text-sm text-black/60">{user?.email}</p>
+              </BrutalistCard>
+
+              <BrutalistButton
+                onClick={joinMeeting}
+                disabled={isLoading || (mode === 'join' && !joinCode.trim())}
+                variant="orange"
+                size="lg"
+                className="w-full flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <div className="retro-loader w-5 h-5 border-2"></div>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5" />
+                    {mode === 'start' ? 'Start Meeting' : 'Join Meeting'}
+                  </>
+                )}
+              </BrutalistButton>
+            </BrutalistCard>
+          </div>
+        ) : (
+          /* In-Call Screen */
+          <div className="h-[calc(100vh-200px)]">
+            {/* Video Container */}
+            <BrutalistCard variant="white" className="h-full mb-4 overflow-hidden">
+              <div id="video-container" className="w-full h-full bg-black"></div>
+            </BrutalistCard>
+
+            {/* Controls */}
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <BrutalistButton
+                onClick={toggleMute}
+                variant={isMuted ? 'orange' : 'yellow'}
+                className="flex items-center gap-2"
+              >
+                {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                {isMuted ? 'Unmute' : 'Mute'}
+              </BrutalistButton>
+
+              <BrutalistButton
+                onClick={toggleVideo}
+                variant={isVideoOff ? 'orange' : 'yellow'}
+                className="flex items-center gap-2"
+              >
+                {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+                {isVideoOff ? 'Start Video' : 'Stop Video'}
+              </BrutalistButton>
+
+              <BrutalistButton
+                onClick={toggleScreenShare}
+                variant={isScreenSharing ? 'orange' : 'ghost'}
+                className="flex items-center gap-2"
+              >
+                <Monitor className="w-5 h-5" />
+                {isScreenSharing ? 'Stop Share' : 'Share Screen'}
+              </BrutalistButton>
+
+              <BrutalistButton
+                onClick={copyMeetingLink}
+                variant="ghost"
+                className="flex items-center gap-2"
+              >
+                {copied ? <CheckCircle className="w-5 h-5 text-[#00D9A5]" /> : <Copy className="w-5 h-5" />}
+                {copied ? 'Copied!' : 'Copy Link'}
+              </BrutalistButton>
+
+              <BrutalistButton
+                onClick={leaveMeeting}
+                variant="orange"
+                className="flex items-center gap-2"
+              >
+                <PhoneOff className="w-5 h-5" />
+                Leave Call
+              </BrutalistButton>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

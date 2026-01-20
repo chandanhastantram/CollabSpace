@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Button } from '@/components/ui/Button';
-import { Spinner } from '@/components/ui/loading';
+import { FloatingShapes, Sticker, BrutalistCard, BrutalistButton } from '@/components/ui/RetroElements';
 import { 
   Users, 
   UserPlus, 
   Search, 
   Check, 
   X, 
+  Clock, 
+  ArrowLeft,
+  Zap,
   UserMinus,
-  Clock,
   Send
 } from 'lucide-react';
 
@@ -21,457 +22,434 @@ interface UserResult {
   _id: string;
   name: string;
   email: string;
-  avatar?: string;
-  connectionStatus: 'none' | 'pending' | 'accepted' | 'rejected' | 'blocked';
+  connectionStatus: 'none' | 'pending-sent' | 'pending-received' | 'connected';
   connectionId?: string;
-  isRequester?: boolean;
 }
 
 interface Connection {
   _id: string;
-  user: {
-    _id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-  };
+  requester: { _id: string; name: string; email: string };
+  recipient: { _id: string; name: string; email: string };
   status: string;
-  isRequester: boolean;
   createdAt: string;
 }
 
 export default function ConnectionsPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
-  
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<'friends' | 'pending' | 'find'>('friends');
-  const [friends, setFriends] = useState<Connection[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserResult[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [pendingReceived, setPendingReceived] = useState<Connection[]>([]);
   const [pendingSent, setPendingSent] = useState<Connection[]>([]);
-  const [searchResults, setSearchResults] = useState<UserResult[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Fetch connections
   useEffect(() => {
-    if (!authLoading && user) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
       fetchConnections();
     }
-  }, [authLoading, user]);
+  }, [isAuthenticated]);
 
   const fetchConnections = async () => {
-    setLoading(true);
     try {
-      // Fetch friends
-      const friendsRes = await fetch('/api/connections?status=accepted');
-      const friendsData = await friendsRes.json();
-      setFriends(friendsData.connections || []);
+      const [friendsRes, pendingRes] = await Promise.all([
+        fetch('/api/connections?status=accepted'),
+        fetch('/api/connections?status=pending'),
+      ]);
 
-      // Fetch pending received
-      const pendingReceivedRes = await fetch('/api/connections?status=pending&type=received');
-      const pendingReceivedData = await pendingReceivedRes.json();
-      setPendingReceived(pendingReceivedData.connections || []);
+      if (friendsRes.ok) {
+        const data = await friendsRes.json();
+        setConnections(data.connections || []);
+      }
 
-      // Fetch pending sent
-      const pendingSentRes = await fetch('/api/connections?status=pending&type=sent');
-      const pendingSentData = await pendingSentRes.json();
-      setPendingSent(pendingSentData.connections || []);
+      if (pendingRes.ok) {
+        const data = await pendingRes.json();
+        const pending = data.connections || [];
+        setPendingReceived(pending.filter((c: Connection) => c.recipient._id === (user as any)?.id));
+        setPendingSent(pending.filter((c: Connection) => c.requester._id === (user as any)?.id));
+      }
     } catch (error) {
-      console.error('Failed to fetch connections:', error);
+      console.error('Error fetching connections:', error);
+    }
+  };
+
+  const searchUsers = async () => {
+    if (!searchQuery.trim()) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.users || []);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Search users
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-
-    setSearching(true);
-    try {
-      const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setSearchResults(data.users || []);
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  // Send friend request
-  const sendRequest = async (recipientId: string) => {
-    setActionLoading(recipientId);
+  const sendRequest = async (userId: string) => {
     try {
       const res = await fetch('/api/connections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipientId }),
+        body: JSON.stringify({ recipientId: userId }),
       });
-      
+
       if (res.ok) {
-        // Update search results
-        setSearchResults(prev => prev.map(u => 
-          u._id === recipientId 
-            ? { ...u, connectionStatus: 'pending', isRequester: true }
-            : u
-        ));
-        // Refresh pending sent
+        searchUsers();
         fetchConnections();
       }
     } catch (error) {
-      console.error('Failed to send request:', error);
-    } finally {
-      setActionLoading(null);
+      console.error('Error sending request:', error);
     }
   };
 
-  // Accept/Reject request
-  const handleRequest = async (connectionId: string, action: 'accept' | 'reject') => {
-    setActionLoading(connectionId);
+  const acceptRequest = async (connectionId: string) => {
     try {
       const res = await fetch(`/api/connections/${connectionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action: 'accept' }),
       });
-      
+
       if (res.ok) {
         fetchConnections();
       }
     } catch (error) {
-      console.error(`Failed to ${action} request:`, error);
-    } finally {
-      setActionLoading(null);
+      console.error('Error accepting request:', error);
     }
   };
 
-  // Remove connection
-  const removeConnection = async (connectionId: string) => {
-    setActionLoading(connectionId);
+  const rejectRequest = async (connectionId: string) => {
+    try {
+      const res = await fetch(`/api/connections/${connectionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' }),
+      });
+
+      if (res.ok) {
+        fetchConnections();
+      }
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+    }
+  };
+
+  const cancelRequest = async (connectionId: string) => {
     try {
       const res = await fetch(`/api/connections/${connectionId}`, {
         method: 'DELETE',
       });
-      
+
       if (res.ok) {
         fetchConnections();
       }
     } catch (error) {
-      console.error('Failed to remove connection:', error);
-    } finally {
-      setActionLoading(null);
+      console.error('Error canceling request:', error);
+    }
+  };
+
+  const unfriend = async (connectionId: string) => {
+    try {
+      const res = await fetch(`/api/connections/${connectionId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        fetchConnections();
+      }
+    } catch (error) {
+      console.error('Error unfriending:', error);
     }
   };
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Spinner size="lg" />
+      <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] flex items-center justify-center">
+        <div className="retro-loader"></div>
       </div>
     );
   }
 
-  if (!user) {
-    router.push('/login');
-    return null;
-  }
-
-  const getInitials = (name: string) => {
-    return name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?';
-  };
+  const tabs = [
+    { id: 'friends', label: 'My Friends', icon: Users, count: connections.length },
+    { id: 'pending', label: 'Pending', icon: Clock, count: pendingReceived.length + pendingSent.length },
+    { id: 'find', label: 'Find People', icon: Search },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex transition-colors duration-300">
-      <Sidebar />
-      
-      <main className="flex-1 p-8 ml-64">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Connections</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage your friends and connections</p>
-          </div>
+    <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] grid-pattern relative overflow-hidden">
+      <FloatingShapes />
 
-          {/* Tabs */}
-          <div className="flex space-x-1 mb-8 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+      {/* Header */}
+      <header className="relative z-10 border-b-4 border-black dark:border-white bg-white dark:bg-[#1a1a1a]">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-[#FFE500] border-3 border-black flex items-center justify-center" style={{ borderWidth: '3px' }}>
+              <Zap className="w-5 h-5 text-black" />
+            </div>
+            <span className="font-black text-xl text-black dark:text-white">CollabSpace</span>
+          </Link>
+        </div>
+      </header>
+
+      <main className="relative z-10 max-w-4xl mx-auto px-6 py-8">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 mb-6 text-black dark:text-white hover:text-[#FF6B35] transition font-bold"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Dashboard
+        </Link>
+
+        <div className={`mb-8 ${mounted ? 'animate-slide-up' : 'opacity-0'}`}>
+          <Sticker variant="mint" className="mb-4">Network</Sticker>
+          <h1 className="text-4xl font-black text-black dark:text-white mb-2">
+            <span className="inline-block bg-[#FFE500] px-3 transform -rotate-1">Connections</span>
+          </h1>
+          <p className="text-black/60 dark:text-white/60">Find and connect with other users</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-3 border-black mb-8" style={{ borderWidth: '3px' }}>
+          {tabs.map((tab, index) => (
             <button
-              onClick={() => setActiveTab('friends')}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
-                activeTab === 'friends'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex-1 py-3 px-4 font-bold uppercase tracking-wide text-sm transition flex items-center justify-center gap-2 ${
+                index > 0 ? 'border-l-3 border-black' : ''
+              } ${
+                activeTab === tab.id 
+                  ? 'bg-[#FFE500] text-black' 
+                  : 'bg-white text-black/60 hover:bg-gray-100'
               }`}
+              style={index > 0 ? { borderLeftWidth: '3px' } : {}}
             >
-              <Users className="w-4 h-4" />
-              <span>My Friends</span>
-              {friends.length > 0 && (
-                <span className="bg-sky-100 dark:bg-sky-900 text-sky-600 dark:text-sky-400 px-2 py-0.5 rounded-full text-xs">
-                  {friends.length}
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+              {tab.count !== undefined && tab.count > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-black text-white text-xs">
+                  {tab.count}
                 </span>
               )}
             </button>
-            <button
-              onClick={() => setActiveTab('pending')}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
-                activeTab === 'pending'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <Clock className="w-4 h-4" />
-              <span>Pending</span>
-              {pendingReceived.length > 0 && (
-                <span className="bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full text-xs">
-                  {pendingReceived.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('find')}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
-                activeTab === 'find'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }`}
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Find People</span>
-            </button>
-          </div>
+          ))}
+        </div>
 
-          {/* Content */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
-            {loading && activeTab !== 'find' ? (
-              <div className="flex items-center justify-center py-12">
-                <Spinner size="lg" />
-              </div>
-            ) : (
-              <>
-                {/* My Friends Tab */}
-                {activeTab === 'friends' && (
-                  <div>
-                    {friends.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No friends yet</h3>
-                        <p className="text-gray-500 dark:text-gray-400 mb-4">Start connecting with people!</p>
-                        <Button onClick={() => setActiveTab('find')} className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white">
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Find People
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {friends.map((conn) => (
-                          <div key={conn._id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                            <div className="flex items-center space-x-3">
-                              {conn.user.avatar ? (
-                                <img src={conn.user.avatar} alt="" className="w-12 h-12 rounded-full" />
-                              ) : (
-                                <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
-                                  {getInitials(conn.user.name)}
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{conn.user.name}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{conn.user.email}</p>
-                              </div>
-                            </div>
-                            <Button
-                              onClick={() => removeConnection(conn._id)}
-                              variant="ghost"
-                              className="text-gray-500 hover:text-red-500"
-                              disabled={actionLoading === conn._id}
-                            >
-                              {actionLoading === conn._id ? <Spinner size="sm" /> : <UserMinus className="w-4 h-4" />}
-                            </Button>
+        {/* Content */}
+        <div className={`${mounted ? 'animate-slide-up delay-200' : 'opacity-0'}`}>
+          {/* My Friends Tab */}
+          {activeTab === 'friends' && (
+            <div className="space-y-4">
+              {connections.length === 0 ? (
+                <BrutalistCard variant="white" className="p-8 text-center">
+                  <Users className="w-16 h-16 text-black/30 mx-auto mb-4" />
+                  <p className="font-bold text-black text-lg">No connections yet</p>
+                  <p className="text-black/60 mb-4">Find people to connect with!</p>
+                  <BrutalistButton variant="orange" onClick={() => setActiveTab('find')}>
+                    Find People
+                  </BrutalistButton>
+                </BrutalistCard>
+              ) : (
+                connections.map((conn) => {
+                  const friend = conn.requester._id === (user as any)?.id ? conn.recipient : conn.requester;
+                  return (
+                    <BrutalistCard key={conn._id} variant="white" className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-[#FFE500] border-3 border-black flex items-center justify-center font-black text-black text-lg" style={{ borderWidth: '3px' }}>
+                            {friend.name?.charAt(0) || '?'}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Pending Tab */}
-                {activeTab === 'pending' && (
-                  <div className="space-y-6">
-                    {/* Received Requests */}
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                        Received Requests
-                      </h3>
-                      {pendingReceived.length === 0 ? (
-                        <p className="text-gray-500 dark:text-gray-400 text-center py-4">No pending requests</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {pendingReceived.map((conn) => (
-                            <div key={conn._id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                              <div className="flex items-center space-x-3">
-                                {conn.user.avatar ? (
-                                  <img src={conn.user.avatar} alt="" className="w-12 h-12 rounded-full" />
-                                ) : (
-                                  <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
-                                    {getInitials(conn.user.name)}
-                                  </div>
-                                )}
-                                <div>
-                                  <p className="font-medium text-gray-900 dark:text-white">{conn.user.name}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{conn.user.email}</p>
-                                </div>
-                              </div>
-                              <div className="flex space-x-2">
-                                <Button
-                                  onClick={() => handleRequest(conn._id, 'accept')}
-                                  className="bg-green-500 hover:bg-green-600 text-white"
-                                  disabled={actionLoading === conn._id}
-                                >
-                                  {actionLoading === conn._id ? <Spinner size="sm" /> : <Check className="w-4 h-4" />}
-                                </Button>
-                                <Button
-                                  onClick={() => handleRequest(conn._id, 'reject')}
-                                  variant="ghost"
-                                  className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  disabled={actionLoading === conn._id}
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
+                          <div>
+                            <p className="font-bold text-black">{friend.name}</p>
+                            <p className="text-sm text-black/60">{friend.email}</p>
+                          </div>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Sent Requests */}
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                        Sent Requests
-                      </h3>
-                      {pendingSent.length === 0 ? (
-                        <p className="text-gray-500 dark:text-gray-400 text-center py-4">No sent requests</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {pendingSent.map((conn) => (
-                            <div key={conn._id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                              <div className="flex items-center space-x-3">
-                                {conn.user.avatar ? (
-                                  <img src={conn.user.avatar} alt="" className="w-12 h-12 rounded-full" />
-                                ) : (
-                                  <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
-                                    {getInitials(conn.user.name)}
-                                  </div>
-                                )}
-                                <div>
-                                  <p className="font-medium text-gray-900 dark:text-white">{conn.user.name}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{conn.user.email}</p>
-                                </div>
-                              </div>
-                              <Button
-                                onClick={() => removeConnection(conn._id)}
-                                variant="ghost"
-                                className="text-gray-500"
-                                disabled={actionLoading === conn._id}
-                              >
-                                {actionLoading === conn._id ? <Spinner size="sm" /> : 'Cancel'}
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Find People Tab */}
-                {activeTab === 'find' && (
-                  <div>
-                    {/* Search Input */}
-                    <div className="relative mb-6">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        placeholder="Search by name or email..."
-                        className="w-full pl-12 pr-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
-
-                    {/* Search Results */}
-                    {searching ? (
-                      <div className="flex items-center justify-center py-12">
-                        <Spinner size="lg" />
+                        <BrutalistButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => unfriend(conn._id)}
+                          className="text-[#FF6B35]"
+                        >
+                          <UserMinus className="w-4 h-4 mr-1" />
+                          Unfriend
+                        </BrutalistButton>
                       </div>
-                    ) : searchQuery.length < 2 ? (
-                      <div className="text-center py-12">
-                        <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 dark:text-gray-400">Enter at least 2 characters to search</p>
-                      </div>
-                    ) : searchResults.length === 0 ? (
-                      <div className="text-center py-12">
-                        <p className="text-gray-500 dark:text-gray-400">No users found</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {searchResults.map((userResult) => (
-                          <div key={userResult._id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                            <div className="flex items-center space-x-3">
-                              {userResult.avatar ? (
-                                <img src={userResult.avatar} alt="" className="w-12 h-12 rounded-full" />
-                              ) : (
-                                <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
-                                  {getInitials(userResult.name)}
-                                </div>
-                              )}
-                              <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{userResult.name}</p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{userResult.email}</p>
-                              </div>
+                    </BrutalistCard>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* Pending Tab */}
+          {activeTab === 'pending' && (
+            <div className="space-y-6">
+              {/* Received Requests */}
+              <div>
+                <Sticker variant="orange" className="mb-4">Received Requests</Sticker>
+                <div className="space-y-3">
+                  {pendingReceived.length === 0 ? (
+                    <p className="text-black/60 dark:text-white/60">No pending requests</p>
+                  ) : (
+                    pendingReceived.map((conn) => (
+                      <BrutalistCard key={conn._id} variant="yellow" className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white border-3 border-black flex items-center justify-center font-black text-black text-lg" style={{ borderWidth: '3px' }}>
+                              {conn.requester.name?.charAt(0) || '?'}
                             </div>
                             <div>
-                              {userResult.connectionStatus === 'none' ? (
-                                <Button
-                                  onClick={() => sendRequest(userResult._id)}
-                                  className="bg-gradient-to-r from-sky-500 to-cyan-500 text-white"
-                                  disabled={actionLoading === userResult._id}
-                                >
-                                  {actionLoading === userResult._id ? (
-                                    <Spinner size="sm" />
-                                  ) : (
-                                    <>
-                                      <UserPlus className="w-4 h-4 mr-2" />
-                                      Connect
-                                    </>
-                                  )}
-                                </Button>
-                              ) : userResult.connectionStatus === 'pending' ? (
-                                <span className="flex items-center text-orange-500 text-sm">
-                                  <Clock className="w-4 h-4 mr-1" />
-                                  {userResult.isRequester ? 'Pending' : 'Accept?'}
-                                </span>
-                              ) : userResult.connectionStatus === 'accepted' ? (
-                                <span className="flex items-center text-green-500 text-sm">
-                                  <Check className="w-4 h-4 mr-1" />
-                                  Friends
-                                </span>
-                              ) : null}
+                              <p className="font-bold text-black">{conn.requester.name}</p>
+                              <p className="text-sm text-black/60">{conn.requester.email}</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <div className="flex gap-2">
+                            <BrutalistButton
+                              variant="orange"
+                              size="sm"
+                              onClick={() => acceptRequest(conn._id)}
+                            >
+                              <Check className="w-4 h-4" />
+                            </BrutalistButton>
+                            <BrutalistButton
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => rejectRequest(conn._id)}
+                            >
+                              <X className="w-4 h-4" />
+                            </BrutalistButton>
+                          </div>
+                        </div>
+                      </BrutalistCard>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Sent Requests */}
+              <div>
+                <Sticker variant="mint" className="mb-4">Sent Requests</Sticker>
+                <div className="space-y-3">
+                  {pendingSent.length === 0 ? (
+                    <p className="text-black/60 dark:text-white/60">No sent requests</p>
+                  ) : (
+                    pendingSent.map((conn) => (
+                      <BrutalistCard key={conn._id} variant="white" className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#00D9A5] border-3 border-black flex items-center justify-center font-black text-black text-lg" style={{ borderWidth: '3px' }}>
+                              {conn.recipient.name?.charAt(0) || '?'}
+                            </div>
+                            <div>
+                              <p className="font-bold text-black">{conn.recipient.name}</p>
+                              <p className="text-sm text-black/60">Pending...</p>
+                            </div>
+                          </div>
+                          <BrutalistButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => cancelRequest(conn._id)}
+                          >
+                            Cancel
+                          </BrutalistButton>
+                        </div>
+                      </BrutalistCard>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Find People Tab */}
+          {activeTab === 'find' && (
+            <div>
+              <div className="flex gap-3 mb-6">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchUsers()}
+                  placeholder="Search by name or email..."
+                  className="brutalist-input flex-1"
+                />
+                <BrutalistButton onClick={searchUsers} variant="orange" disabled={loading}>
+                  <Search className="w-5 h-5" />
+                </BrutalistButton>
+              </div>
+
+              <div className="space-y-3">
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="retro-loader"></div>
                   </div>
+                ) : searchResults.length === 0 ? (
+                  <BrutalistCard variant="white" className="p-8 text-center">
+                    <Search className="w-16 h-16 text-black/30 mx-auto mb-4" />
+                    <p className="text-black/60">Search for users to connect with</p>
+                  </BrutalistCard>
+                ) : (
+                  searchResults.map((result) => (
+                    <BrutalistCard key={result._id} variant="white" className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-[#FFE500] border-3 border-black flex items-center justify-center font-black text-black text-lg" style={{ borderWidth: '3px' }}>
+                            {result.name?.charAt(0) || '?'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-black">{result.name}</p>
+                            <p className="text-sm text-black/60">{result.email}</p>
+                          </div>
+                        </div>
+                        {result.connectionStatus === 'none' && (
+                          <BrutalistButton
+                            variant="orange"
+                            size="sm"
+                            onClick={() => sendRequest(result._id)}
+                          >
+                            <UserPlus className="w-4 h-4 mr-1" />
+                            Connect
+                          </BrutalistButton>
+                        )}
+                        {result.connectionStatus === 'pending-sent' && (
+                          <Sticker variant="mint">Pending</Sticker>
+                        )}
+                        {result.connectionStatus === 'pending-received' && (
+                          <BrutalistButton
+                            variant="yellow"
+                            size="sm"
+                            onClick={() => acceptRequest(result.connectionId!)}
+                          >
+                            Accept
+                          </BrutalistButton>
+                        )}
+                        {result.connectionStatus === 'connected' && (
+                          <Sticker variant="mint">Connected ✓</Sticker>
+                        )}
+                      </div>
+                    </BrutalistCard>
+                  ))
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
