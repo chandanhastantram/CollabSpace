@@ -1,7 +1,6 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { FloatingShapes, MarqueeBanner, Sticker, BrutalistCard, BrutalistButton, HighlightText } from '@/components/ui/RetroElements';
 import { 
   FileText, 
@@ -19,7 +18,7 @@ import {
   Coffee
 } from 'lucide-react';
 
-// Fun floating text stickers that appear randomly
+// Fun floating text stickers
 function FunStickers() {
   const stickers = [
     { text: "FREE FOREVER! 🎉", top: "15%", left: "5%", rotate: "-12deg", variant: "yellow" as const },
@@ -53,12 +52,6 @@ function FunStickers() {
 }
 
 export default function HomePage() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const features = [
     {
       icon: FileText,
@@ -139,16 +132,16 @@ export default function HomePage() {
           <div className="text-center mb-16">
             {/* Stickers */}
             <div className="flex justify-center gap-4 mb-8">
-              <Sticker variant="mint" className={mounted ? 'animate-slide-up' : 'opacity-0'}>
+              <Sticker variant="mint">
                 ✨ New Features
               </Sticker>
-              <Sticker variant="orange" className={mounted ? 'animate-slide-up delay-100' : 'opacity-0'}>
+              <Sticker variant="orange">
                 🚀 Just Launched
               </Sticker>
             </div>
 
             {/* Main Title */}
-            <h1 className={`text-6xl md:text-8xl font-black text-black mb-6 leading-none ${mounted ? 'animate-slide-up delay-200' : 'opacity-0'}`}>
+            <h1 className="text-6xl md:text-8xl font-black text-black mb-6 leading-none">
               <span className="inline-block bg-[#FFE500] px-4 py-2 transform -rotate-1 border-4 border-black">
                 COLLAB
               </span>
@@ -157,7 +150,7 @@ export default function HomePage() {
             </h1>
 
             {/* Subtitle */}
-            <div className={`mb-8 ${mounted ? 'animate-slide-up delay-300' : 'opacity-0'}`}>
+            <div className="mb-8">
               <BrutalistCard variant="white" className="inline-block px-6 py-4 transform rotate-1">
                 <p className="text-xl md:text-2xl font-bold text-black flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-[#FF6B35]" />
@@ -168,14 +161,14 @@ export default function HomePage() {
             </div>
 
             {/* Description */}
-            <p className={`text-lg text-black/70 max-w-2xl mx-auto mb-10 ${mounted ? 'animate-slide-up delay-400' : 'opacity-0'}`}>
+            <p className="text-lg text-black/70 max-w-2xl mx-auto mb-10">
               The <HighlightText color="yellow">all-in-one platform</HighlightText> for teams to 
               collaborate on documents, communicate in real-time, and connect via 
-              <HighlightText color="mint">video calls</HighlightText> — all in one place.
+              <HighlightText color="mint"> video calls</HighlightText> — all in one place.
             </p>
 
             {/* CTA Buttons */}
-            <div className={`flex flex-wrap justify-center gap-4 ${mounted ? 'animate-slide-up delay-500' : 'opacity-0'}`}>
+            <div className="flex flex-wrap justify-center gap-4">
               <Link href="/register">
                 <BrutalistButton variant="orange" size="lg" className="flex items-center gap-2">
                   Get Started Free
@@ -190,15 +183,15 @@ export default function HomePage() {
             </div>
 
             {/* Fun badges below CTA */}
-            <div className={`mt-8 flex flex-wrap justify-center gap-3 ${mounted ? 'animate-slide-up delay-700' : 'opacity-0'}`}>
-              <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-black text-sm font-bold">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-black text-sm font-bold text-black">
                 <Heart className="w-4 h-4 text-red-500" /> Loved by 10K+ teams
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-black text-sm font-bold">
+              <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-black text-sm font-bold text-black">
                 <Star className="w-4 h-4 text-yellow-500" /> 4.9/5 rating
               </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-black text-sm font-bold">
-                <Coffee className="w-4 h-4 text-brown-500" /> Made with love
+              <div className="flex items-center gap-2 px-3 py-1 bg-white border-2 border-black text-sm font-bold text-black">
+                <Coffee className="w-4 h-4 text-amber-700" /> Made with love
               </div>
             </div>
           </div>
@@ -210,8 +203,7 @@ export default function HomePage() {
                 key={feature.title} 
                 variant={feature.color}
                 tilt={index % 2 === 0}
-                className={`p-6 ${mounted ? 'animate-slide-up' : 'opacity-0'}`}
-                style={{ animationDelay: `${600 + index * 100}ms` } as React.CSSProperties}
+                className="p-6"
               >
                 <div className="w-14 h-14 bg-black flex items-center justify-center mb-4">
                   <feature.icon className="w-7 h-7 text-[#FFE500]" />
@@ -224,16 +216,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section - High contrast with white text on black */}
+      {/* Stats Section - White text on black */}
       <section className="relative z-10 py-16 bg-black border-y-4 border-black">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div 
-                key={stat.label} 
-                className={`text-center ${mounted ? 'animate-slide-up' : 'opacity-0'}`}
-                style={{ animationDelay: `${1000 + index * 100}ms` } as React.CSSProperties}
-              >
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
                 <div className="text-5xl font-black text-[#FFE500] mb-2">{stat.number}</div>
                 <div className="text-white font-bold uppercase tracking-wider text-sm">{stat.label}</div>
               </div>
@@ -256,6 +244,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1 - White background */}
             <BrutalistCard variant="white" className="p-8">
               <div className="w-16 h-16 bg-[#FFE500] border-3 border-black flex items-center justify-center mb-6" style={{ borderWidth: '3px' }}>
                 <Zap className="w-8 h-8 text-black" />
@@ -266,6 +255,7 @@ export default function HomePage() {
               </p>
             </BrutalistCard>
 
+            {/* Card 2 - Yellow background */}
             <BrutalistCard variant="yellow" className="p-8 transform rotate-1">
               <div className="w-16 h-16 bg-black flex items-center justify-center mb-6">
                 <Shield className="w-8 h-8 text-[#FFE500]" />
@@ -276,6 +266,7 @@ export default function HomePage() {
               </p>
             </BrutalistCard>
 
+            {/* Card 3 - White background */}
             <BrutalistCard variant="white" className="p-8">
               <div className="w-16 h-16 bg-[#00D9A5] border-3 border-black flex items-center justify-center mb-6" style={{ borderWidth: '3px' }}>
                 <Clock className="w-8 h-8 text-black" />
@@ -309,7 +300,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer - White text on black */}
       <footer className="relative z-10 py-12 px-6 bg-black border-t-4 border-black">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
