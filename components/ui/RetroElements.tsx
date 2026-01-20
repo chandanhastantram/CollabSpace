@@ -52,7 +52,7 @@ export function FloatingShapes() {
       {shapes.map((shape) => (
         <div
           key={shape.id}
-          className={`absolute border-2 border-black/20 dark:border-white/20 ${getColorClass(shape.color)} ${shape.animation}`}
+          className={`absolute border-2 border-black/20 ${getColorClass(shape.color)} ${shape.animation}`}
           style={{
             width: `${shape.size}px`,
             height: `${shape.size}px`,
@@ -97,7 +97,7 @@ export function Sticker({
     yellow: 'bg-[#FFE500] text-black',
     orange: 'bg-[#FF6B35] text-white',
     mint: 'bg-[#00D9A5] text-black',
-    black: 'bg-black text-white dark:bg-white dark:text-black',
+    black: 'bg-black text-white',
   };
 
   return (
@@ -117,23 +117,24 @@ export function BrutalistCard({
   className = '' 
 }: { 
   children: React.ReactNode; 
-  variant?: 'white' | 'yellow' | 'orange';
+  variant?: 'white' | 'yellow' | 'orange' | 'black';
   hover?: boolean;
   tilt?: boolean;
   className?: string;
 }) {
   const variantClasses = {
-    white: 'bg-white dark:bg-[#1a1a1a]',
-    yellow: 'bg-[#FFE500]',
+    white: 'bg-white text-black',
+    yellow: 'bg-[#FFE500] text-black',
     orange: 'bg-[#FF6B35] text-white',
+    black: 'bg-black text-white',
   };
 
-  const hoverClass = hover ? 'hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-[9px_9px_0_#000] dark:hover:shadow-[9px_9px_0_#fff]' : '';
+  const hoverClass = hover ? 'hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-[9px_9px_0_#000]' : '';
   const tiltClass = tilt ? 'transform rotate-[-2deg]' : '';
 
   return (
     <div 
-      className={`border-3 border-black dark:border-white shadow-[6px_6px_0_#000] dark:shadow-[6px_6px_0_#fff] transition-all duration-200 ${variantClasses[variant]} ${hoverClass} ${tiltClass} ${className}`}
+      className={`border-3 border-black shadow-[6px_6px_0_#000] transition-all duration-200 ${variantClasses[variant]} ${hoverClass} ${tiltClass} ${className}`}
       style={{ borderWidth: '3px' }}
     >
       {children}
@@ -156,8 +157,8 @@ export function BrutalistButton({
   const variantClasses = {
     orange: 'bg-[#FF6B35] text-white hover:bg-[#FF5722]',
     yellow: 'bg-[#FFE500] text-black hover:bg-[#FFD700]',
-    ghost: 'bg-transparent text-black dark:text-white hover:bg-[#FFE500]',
-    black: 'bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200',
+    ghost: 'bg-transparent text-black hover:bg-[#FFE500] hover:text-black',
+    black: 'bg-black text-white hover:bg-gray-800',
   };
 
   const sizeClasses = {
@@ -168,7 +169,7 @@ export function BrutalistButton({
 
   return (
     <button 
-      className={`font-bold uppercase tracking-wider border-3 border-black dark:border-white shadow-[4px_4px_0_#000] dark:shadow-[4px_4px_0_#fff] transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_#000] dark:hover:shadow-[6px_6px_0_#fff] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#000] dark:active:shadow-[2px_2px_0_#fff] ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      className={`font-bold uppercase tracking-wider border-3 border-black shadow-[4px_4px_0_#000] transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_#000] ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       style={{ borderWidth: '3px' }}
       {...props}
     >
@@ -187,9 +188,9 @@ export function HighlightText({
   className?: string;
 }) {
   const colorClasses = {
-    yellow: 'bg-[#FFE500]',
+    yellow: 'bg-[#FFE500] text-black',
     orange: 'bg-[#FF6B35] text-white',
-    mint: 'bg-[#00D9A5]',
+    mint: 'bg-[#00D9A5] text-black',
   };
 
   return (
