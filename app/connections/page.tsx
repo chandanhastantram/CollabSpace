@@ -77,8 +77,9 @@ export default function ConnectionsPage() {
       if (pendingRes.ok) {
         const data = await pendingRes.json();
         const pending = data.connections || [];
-        setPendingReceived(pending.filter((c: Connection) => c.recipient._id === (user as any)?.id));
-        setPendingSent(pending.filter((c: Connection) => c.requester._id === (user as any)?.id));
+        const userId = (user as any)?.id || '';
+        setPendingReceived(pending.filter((c: Connection) => c.recipient?._id === userId || c.recipient?.id === userId));
+        setPendingSent(pending.filter((c: Connection) => c.requester?._id === userId || c.requester?.id === userId));
       }
     } catch (error) {
       console.error('Error fetching connections:', error);
