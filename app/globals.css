@@ -8,48 +8,50 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 0%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 0%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 0 0% 10%;
-    --accent-foreground: 0 0% 100%;
+    /* Light theme - white background, dark text */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 199 89% 48%;
     --radius: 0.5rem;
   }
 
   .dark {
+    /* Dark theme - black background, white text */
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 0%;
+    --card: 0 0% 5%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 0%;
+    --popover: 0 0% 5%;
     --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 0 0% 10%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 15%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 0 0% 100%;
+    --ring: 199 89% 48%;
   }
 }
 
@@ -58,55 +60,59 @@
     @apply border-border;
   }
   body {
-    @apply bg-black text-white;
+    @apply bg-background text-foreground transition-colors duration-300;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Light */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
+  @apply bg-muted;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
+  @apply bg-muted-foreground/30 rounded;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  @apply bg-muted-foreground/50;
 }
 
-/* Quill Editor Dark Theme */
+/* Quill Editor - uses theme-aware styles */
 .ql-toolbar {
-  background: #111 !important;
-  border-color: #333 !important;
+  @apply bg-muted border-border !important;
 }
 
 .ql-container {
-  background: #000 !important;
-  border-color: #333 !important;
-  color: #fff !important;
+  @apply bg-background border-border !important;
 }
 
 .ql-editor {
-  color: #fff !important;
+  @apply text-foreground !important;
 }
 
 .ql-stroke {
-  stroke: #fff !important;
+  @apply !stroke-foreground;
 }
 
 .ql-fill {
-  fill: #fff !important;
+  @apply !fill-foreground;
 }
 
 .ql-picker-label {
-  color: #fff !important;
+  @apply !text-foreground;
+}
+
+.ql-picker-options {
+  @apply !bg-popover !border-border;
+}
+
+.ql-picker-item {
+  @apply !text-foreground;
 }
 
 /* Loading Spinner */

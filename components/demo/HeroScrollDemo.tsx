@@ -11,7 +11,7 @@ export function HeroScrollDemo() {
           <>
             <h1 className="text-4xl font-semibold text-black dark:text-white">
               Collaborate in{' '}
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-sky-500 to-cyan-500 bg-clip-text text-transparent">
                 Real-Time
               </span>
               <br />

@@ -117,7 +117,7 @@ export default function MessagesPage() {
                     className="w-8 h-8 rounded-full"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center text-white text-sm font-bold">
                     {member.info.name?.charAt(0) || '?'}
                   </div>
                 )}

@@ -33,14 +33,14 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       {action && (
         action.href ? (
           <Link href={action.href}>
-            <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
+            <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white">
               {action.label}
             </Button>
           </Link>
         ) : (
           <Button
             onClick={action.onClick}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+            className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white"
           >
             {action.label}
           </Button>

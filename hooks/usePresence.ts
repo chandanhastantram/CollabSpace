@@ -79,7 +79,7 @@ function generateUserColor(userId: string): string {
     '#10B981', // Green
     '#F59E0B', // Amber
     '#EF4444', // Red
-    '#8B5CF6', // Purple
+    '#0EA5E9', // Sky
     '#EC4899', // Pink
     '#14B8A6', // Teal
     '#F97316', // Orange

@@ -15,6 +15,7 @@ import {
   File
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 interface SidebarProps {
   workspaceId?: string;
@@ -29,6 +30,7 @@ export function Sidebar({ workspaceId, workspaceName }: SidebarProps) {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Workspaces', href: '/workspaces', icon: Folder },
     { name: 'Dashboard', href: '/dashboard', icon: FileText },
+    { name: 'Connections', href: '/connections', icon: Users },
   ];
 
   const workspaceNav = workspaceId ? [
@@ -49,7 +51,7 @@ export function Sidebar({ workspaceId, workspaceName }: SidebarProps) {
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
         {!collapsed && (
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-gray-900 dark:text-white">CollabSpace</span>
@@ -153,6 +155,20 @@ export function Sidebar({ workspaceId, workspaceName }: SidebarProps) {
           </>
         )}
       </nav>
+
+      {/* Theme Toggle Footer */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-800">
+        {!collapsed ? (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Theme</span>
+            <ThemeToggle />
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <ThemeToggle className="scale-75" />
+          </div>
+        )}
+      </div>
     </aside>
   );
 }

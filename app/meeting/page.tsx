@@ -37,12 +37,18 @@ export default function MeetingPage() {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
+  
+  // Join mode: 'start' or 'join'
+  const [mode, setMode] = useState<'start' | 'join'>(searchParams.get('id') ? 'join' : 'start');
+  const [joinCode, setJoinCode] = useState(searchParams.get('id') || '');
 
   // Get room ID from URL or generate new
   useEffect(() => {
     const urlRoomId = searchParams.get('id');
     if (urlRoomId) {
       setRoomName(urlRoomId);
+      setJoinCode(urlRoomId);
+      setMode('join');
     } else {
       const newRoomId = `meet-${Date.now().toString(36)}`;
       setRoomName(newRoomId);
@@ -51,7 +57,11 @@ export default function MeetingPage() {
 
   // Create or join room
   const joinMeeting = async () => {
-    if (!roomName) return;
+    const meetingId = mode === 'join' && joinCode ? joinCode.trim() : roomName;
+    if (!meetingId) {
+      setError('Please enter a meeting code');
+      return;
+    }
     
     setIsLoading(true);
     setError('');
@@ -61,7 +71,7 @@ export default function MeetingPage() {
       const createResponse = await fetch('/api/meetings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: roomName }),
+        body: JSON.stringify({ name: meetingId }),
       });
 
       let room;
@@ -70,7 +80,7 @@ export default function MeetingPage() {
         room = data.room;
       } else {
         // Room might already exist, try to get it
-        const getResponse = await fetch(`/api/meetings?name=${roomName}`);
+        const getResponse = await fetch(`/api/meetings?name=${meetingId}`);
         if (getResponse.ok) {
           const data = await getResponse.json();
           room = data.room;
@@ -86,9 +96,9 @@ export default function MeetingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomName: roomName,
+          roomName: meetingId,
           userName: user?.name || 'Guest',
-          isOwner: !searchParams.get('id'), // Owner if creating new room
+          isOwner: mode === 'start', // Owner if starting new room
         }),
       });
 
@@ -226,50 +236,88 @@ export default function MeetingPage() {
   // Pre-call lobby
   if (!isJoined) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-950 to-black flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-800 p-8">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-950 dark:to-black flex items-center justify-center p-6 transition-colors duration-300">
+        <div className="max-w-md w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-800 p-8 transition-colors duration-300">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Video className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Video Call</h1>
-            <p className="text-gray-400">
-              {searchParams.get('id') ? 'Join this meeting' : 'Start a new meeting'}
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Video Call</h1>
+          </div>
+
+          {/* Mode Toggle Tabs */}
+          <div className="flex mb-6 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <button
+              onClick={() => setMode('start')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                mode === 'start'
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Start New
+            </button>
+            <button
+              onClick={() => setMode('join')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                mode === 'join'
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Join Existing
+            </button>
           </div>
 
           {error && (
-            <div className="p-4 bg-red-900/30 border border-red-800 rounded-lg mb-6">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="p-4 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 rounded-lg mb-6">
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
           )}
 
-          {/* Meeting ID */}
-          <div className="mb-6">
-            <label className="block text-sm text-gray-400 mb-2">Meeting ID</label>
-            <div className="flex items-center space-x-2">
+          {/* Start New Meeting - Show generated Meeting ID */}
+          {mode === 'start' && (
+            <div className="mb-6">
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Your Meeting ID</label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={roomName}
+                  readOnly
+                  className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm font-mono"
+                />
+                <Button onClick={copyMeetingLink} variant="outline" className="shrink-0">
+                  {copied ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Share this link with others to join</p>
+            </div>
+          )}
+
+          {/* Join Existing Meeting - Enter Meeting Code */}
+          {mode === 'join' && (
+            <div className="mb-6">
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Enter Meeting Code</label>
               <input
                 type="text"
-                value={roomName}
-                readOnly
-                className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm font-mono"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                placeholder="e.g. meet-abc123xyz"
+                className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm font-mono placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <Button onClick={copyMeetingLink} variant="outline" className="shrink-0">
-                {copied ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
-              </Button>
+              <p className="text-xs text-gray-500 mt-2">Enter the meeting code shared with you</p>
             </div>
-            <p className="text-xs text-gray-500 mt-2">Share this link with others to join</p>
-          </div>
+          )}
 
           {/* User info */}
           {user && (
-            <div className="flex items-center p-4 bg-gray-800/50 rounded-lg mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+            <div className="flex items-center p-4 bg-gray-100 dark:bg-gray-800/50 rounded-lg mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
                 {user.name?.charAt(0) || 'U'}
               </div>
               <div className="ml-3">
-                <p className="text-white font-medium">{user.name || 'User'}</p>
-                <p className="text-gray-400 text-sm">{user.email}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{user.name || 'User'}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{user.email}</p>
               </div>
             </div>
           )}
@@ -277,7 +325,7 @@ export default function MeetingPage() {
           <Button
             onClick={joinMeeting}
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3"
+            className="w-full bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white py-3"
           >
             {isLoading ? (
               <>
@@ -287,7 +335,7 @@ export default function MeetingPage() {
             ) : (
               <>
                 <Video className="w-5 h-5 mr-2" />
-                {searchParams.get('id') ? 'Join Call' : 'Start Call'}
+                {mode === 'join' ? 'Join Call' : 'Start Call'}
               </>
             )}
           </Button>

@@ -39,7 +39,7 @@ export function UserAvatar({ name, avatar, size = "md", className, online }: Use
       ) : (
         <div
           className={cn(
-            "rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-semibold text-white",
+            "rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center font-semibold text-white",
             sizeClasses[size],
             className
           )}

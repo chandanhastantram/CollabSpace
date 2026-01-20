@@ -58,7 +58,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <div className="flex items-center justify-center space-x-4">
               <Button
                 onClick={() => window.location.reload()}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white"
               >
                 Refresh Page
               </Button>

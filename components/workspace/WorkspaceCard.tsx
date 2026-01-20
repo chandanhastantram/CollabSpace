@@ -26,7 +26,7 @@ export function WorkspaceCard({
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'owner':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+        return 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400';
       case 'admin':
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
       case 'editor':

@@ -53,7 +53,7 @@ export function generateUserColor(userId: string): string {
     '#F59E0B', // amber
     '#10B981', // emerald
     '#3B82F6', // blue
-    '#8B5CF6', // violet
+    '#0EA5E9', // sky
     '#EC4899', // pink
     '#14B8A6', // teal
     '#F97316', // orange

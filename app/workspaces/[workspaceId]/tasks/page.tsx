@@ -86,7 +86,7 @@ export default function TasksPage({ params }: { params: { workspaceId: string } 
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Tasks
           </h1>
-          <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
+          <Button className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white">
             <Plus className="w-4 h-4 mr-2" />
             New Task
           </Button>

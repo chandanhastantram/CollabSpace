@@ -36,7 +36,7 @@ export function TemplateGallery({ templates, onUseTemplate }: TemplateGalleryPro
             className="group p-6 rounded-xl border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg transition-all duration-200"
           >
             {/* Thumbnail */}
-            <div className="mb-4 h-32 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 flex items-center justify-center">
+            <div className="mb-4 h-32 rounded-lg bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-sky-900/20 dark:to-cyan-900/20 flex items-center justify-center">
               <FileText className="w-12 h-12 text-indigo-600 dark:text-indigo-400" />
             </div>
 
@@ -57,7 +57,7 @@ export function TemplateGallery({ templates, onUseTemplate }: TemplateGalleryPro
               <Button
                 onClick={() => onUseTemplate(template._id)}
                 size="sm"
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white"
               >
                 Use Template
               </Button>

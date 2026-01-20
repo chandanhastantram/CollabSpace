@@ -12,10 +12,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-sky-500 to-cyan-500 bg-clip-text text-transparent">
                 CollabSpace
               </span>
             </div>
@@ -48,7 +48,7 @@ export default function HomePage() {
               </Link>
               <Link 
                 href="/register"
-                className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+                className="px-6 py-2 bg-gradient-to-r from-sky-500 to-cyan-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
               >
                 Get Started
               </Link>
@@ -75,7 +75,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="p-8 rounded-2xl border-2 border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-xl transition-all duration-300 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -101,7 +101,7 @@ export default function HomePage() {
 
             {/* Feature 3 */}
             <div className="p-8 rounded-2xl border-2 border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-xl transition-all duration-300 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -157,7 +157,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-12 shadow-2xl">
+          <div className="bg-gradient-to-br from-sky-500 to-cyan-600 rounded-3xl p-12 shadow-2xl">
             <h2 className="text-4xl font-bold text-white mb-4">
               Ready to Transform Your Workflow?
             </h2>
@@ -178,7 +178,7 @@ export default function HomePage() {
       <footer className="py-12 px-6 bg-gray-900 text-gray-400">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-6 h-6 bg-gradient-to-br from-sky-500 to-cyan-500 rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold text-white">CollabSpace</span>

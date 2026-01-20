@@ -20,7 +20,8 @@ import {
   Search,
   LogOut,
   ChevronRight,
-  BarChart2
+  BarChart2,
+  UserPlus
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -107,6 +108,12 @@ export default function Dashboard() {
       label: 'Analytics', 
       desc: 'View usage statistics',
       href: '/analytics',
+    },
+    { 
+      icon: UserPlus, 
+      label: 'Connections', 
+      desc: 'Find & connect with people',
+      href: '/connections',
     },
   ];
 

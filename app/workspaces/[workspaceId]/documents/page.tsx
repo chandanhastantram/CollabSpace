@@ -109,7 +109,7 @@ export default function DocumentsPage({ params }: { params: { workspaceId: strin
             <Button
               onClick={handleCreateDocument}
               disabled={creating}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex items-center space-x-2"
+              className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white flex items-center space-x-2"
             >
               <Plus className="w-4 h-4" />
               <span>{creating ? 'Creating...' : 'New Document'}</span>
@@ -152,7 +152,7 @@ export default function DocumentsPage({ params }: { params: { workspaceId: strin
               <Button
                 onClick={handleCreateDocument}
                 disabled={creating}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 {creating ? 'Creating...' : 'Create Document'}

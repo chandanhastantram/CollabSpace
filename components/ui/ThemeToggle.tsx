@@ -1,16 +1,29 @@
 "use client"
 
+import { useTheme } from "next-themes"
 import { Moon, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useTheme } from "../providers/ThemeProvider"
+import { useEffect, useState } from "react"
 
 interface ThemeToggleProps {
   className?: string
 }
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
-  const { theme, toggleTheme } = useTheme()
-  const isDark = theme === 'dark'
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className={cn("w-16 h-8 rounded-full bg-zinc-800", className)} />
+    )
+  }
+
+  const isDark = resolvedTheme === "dark"
 
   return (
     <div
@@ -21,7 +34,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
           : "bg-white border border-zinc-200",
         className
       )}
-      onClick={toggleTheme}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       role="button"
       tabIndex={0}
       aria-label="Toggle theme"
