@@ -5,8 +5,25 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useAuth } from '@/components/providers/AuthProvider';
-import { FloatingShapes, MarqueeBanner, Sticker, BrutalistCard, BrutalistButton, HighlightText } from '@/components/ui/RetroElements';
-import { Zap, Eye, EyeOff, Github, Chrome, ArrowRight, Sparkles } from 'lucide-react';
+import { FloatingShapes, Sticker, BrutalistCard, BrutalistButton } from '@/components/ui/RetroElements';
+import { Zap, Eye, EyeOff, Github, Chrome, ArrowRight, Sparkles, Heart } from 'lucide-react';
+
+// Fun floating stickers
+function FunStickers() {
+  return (
+    <>
+      <div className="hidden lg:block fixed z-20 top-[20%] left-[3%] animate-float-slow pointer-events-none" style={{ transform: 'rotate(-8deg)' }}>
+        <Sticker variant="mint">WELCOME BACK! 👋</Sticker>
+      </div>
+      <div className="hidden lg:block fixed z-20 top-[35%] right-[5%] animate-float pointer-events-none" style={{ transform: 'rotate(6deg)' }}>
+        <Sticker variant="yellow">SECURE LOGIN 🔒</Sticker>
+      </div>
+      <div className="hidden lg:block fixed z-20 bottom-[25%] left-[5%] animate-float-reverse pointer-events-none" style={{ transform: 'rotate(10deg)' }}>
+        <Sticker variant="orange">FREE FOREVER!</Sticker>
+      </div>
+    </>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,21 +82,28 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF8E7] dark:bg-[#0a0a0a] grid-pattern relative overflow-hidden">
+    <div className="min-h-screen bg-[#FFF8E7] grid-pattern relative overflow-hidden">
       <FloatingShapes />
+      <FunStickers />
       
-      {/* Marquee */}
-      <MarqueeBanner text="Welcome Back — Login to Continue Your Work" />
+      {/* Header Bar */}
+      <div className="relative z-10 py-3 bg-[#FF6B35] border-b-4 border-black">
+        <div className="text-center text-white font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          Login to Your Account
+          <Sparkles className="w-4 h-4" />
+        </div>
+      </div>
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-[calc(100vh-48px)] flex items-center justify-center px-6 py-12">
+      <div className="relative z-10 min-h-[calc(100vh-60px)] flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           {/* Logo */}
           <Link href="/" className="flex items-center justify-center space-x-3 mb-8 group">
             <div className="w-14 h-14 bg-[#FFE500] border-3 border-black flex items-center justify-center transform group-hover:rotate-12 transition-transform" style={{ borderWidth: '3px' }}>
               <Zap className="w-8 h-8 text-black" />
             </div>
-            <span className="text-3xl font-black text-black dark:text-white">CollabSpace</span>
+            <span className="text-3xl font-black text-black">CollabSpace</span>
           </Link>
 
           {/* Login Card */}
@@ -94,7 +118,7 @@ export default function LoginPage() {
             <div className="space-y-3 mb-6">
               <button
                 onClick={() => handleSocialLogin('google')}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-3 border-black font-bold uppercase tracking-wide hover:bg-[#FFE500] transition-colors shadow-[4px_4px_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_#000]"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-3 border-black font-bold uppercase tracking-wide text-black hover:bg-[#FFE500] transition-colors shadow-[4px_4px_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_#000]"
                 style={{ borderWidth: '3px' }}
               >
                 <Chrome className="w-5 h-5" />
@@ -186,7 +210,7 @@ export default function LoginPage() {
           {/* Demo Credentials */}
           <BrutalistCard variant="yellow" tilt className="mt-6 p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-black" />
+              <Heart className="w-5 h-5 text-black" />
               <span className="font-black text-black">Demo Credentials</span>
             </div>
             <p className="text-black/80 text-sm font-mono">
@@ -194,6 +218,13 @@ export default function LoginPage() {
               Password: Demo123!
             </p>
           </BrutalistCard>
+
+          {/* Back to Home */}
+          <div className="text-center mt-6">
+            <Link href="/" className="text-black/60 hover:text-black font-bold">
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>
